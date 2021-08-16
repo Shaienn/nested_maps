@@ -1,0 +1,9 @@
+{application, nested_maps,
+  [
+	  {description, "Library for nested maps working"},
+	  {vsn, "0.0.1"},
+    {registered, []},
+    {env, []},
+    {applications, [kernel, stdlib]}
+  ]
+}.
