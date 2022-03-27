@@ -258,6 +258,8 @@ simple_non_strict_get_operations(Map, Parameters) ->
     ?TRY([], nested_maps:get([[k1_2], [], [k3_1]], Map, #{strict => false})),
 
     ?TRY([], nested_maps:get([], Map, #{strict => false})),
+    ?TRY([], nested_maps:get([[k1_1], [k2_1]], Map, Parameters#{strict => false})),
+
     ok.
 
 common_simple_get_operations(Map, Parameters) ->
@@ -276,6 +278,8 @@ common_simple_get_operations(Map, Parameters) ->
 
 simple_strict_get_exceptions(Map, Parameters) ->
     ok = common_simple_get_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {[k2_1], v1_1}, Map}, nested_maps:get([[k1_1], [k2_1]], Map, Parameters#{strict => true})),
     ?TRY({badarg, {'Address', []}}, nested_maps:get([], Map, Parameters#{strict => true})),
 
     ?TRY({badkey, ne_key}, nested_maps:get([[ne_key], [k2_1], [k3_2]], Map, Parameters#{strict => true})),
@@ -296,7 +300,6 @@ simple_non_strict_get_exceptions(Map, Parameters) ->
     ok.
 
 common_simple_get_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1], v1_1}, Map}, nested_maps:get([[k1_1], [k2_1]], Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:get([[k1_2], [k2_1], [k3_2]], not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:get(not_a_list, Map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
@@ -334,6 +337,10 @@ wildcard_non_strict_get_operations(Map, Parameters) ->
     ?TRY([v3_3_2], nested_maps:get([[k1_2], '*', [k3_3]], Map, Parameters#{strict => false})),
 
     ?TRY([], nested_maps:get([[k1_3], '*', [k3_2]], Map, Parameters#{strict => false})),
+    ?TRY([], nested_maps:get([[k1_1], '*'], Map, Parameters#{strict => false})),
+
+    ?TRY([v3_2_1, v3_1_1, v3_3_2, v3_2_2], nested_maps:get(['*', '*', '*'], Map, Parameters#{strict => false})),
+
     ok.
 
 common_wildcard_get_operations(Map, Parameters) ->
@@ -350,6 +357,8 @@ common_wildcard_get_operations(Map, Parameters) ->
 
 wildcard_strict_get_exceptions(Map, Parameters) ->
     ok = common_wildcard_get_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:get([[k1_1], '*'], Map, Parameters#{strict => true})),
     ?TRY({badkey, k3_1}, nested_maps:get([[k1_2], '*', [k3_1]], Map, Parameters#{strict => true})),
     ?TRY({badkey, k3_3}, nested_maps:get([[k1_2], '*', [k3_3]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:get([[k1_2], [ne_key], '*'], Map, Parameters#{strict => true})),
@@ -357,20 +366,21 @@ wildcard_strict_get_exceptions(Map, Parameters) ->
     ?TRY({badkey, ne_key}, nested_maps:get([[ne_key], [ne_key], '*'], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:get([[ne_key], [k2_1], '*'], Map, Parameters#{strict => true})),
     ?TRY({unreachable_address, [[k1_3], '*', [k3_2]]}, nested_maps:get([[k1_3], '*', [k3_2]], Map, Parameters#{strict => true})),
+
+    case maps:get(parallel, Parameters) of
+        true ->
+            ?TRYV([{badmap, {'*', v1_1}, Map}, {unreachable_address, ['*', '*', '*']}], nested_maps:get(['*', '*', '*'], Map, Parameters#{strict => true}));
+        false ->
+            ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:get(['*', '*', '*'], Map, Parameters#{strict => true}))
+    end,
+
     ok.
 
 wildcard_non_strict_get_exceptions(Map, Parameters) ->
     ok = common_wildcard_get_exceptions(Map, Parameters#{strict => false}),
     ok.
 
-common_wildcard_get_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:get([[k1_1], '*'], Map, Parameters)),
-    case maps:get(parallel, Parameters) of
-        true ->
-            ?TRYV([{badmap, {'*', v1_1}, Map}, {unreachable_address, ['*', '*', '*']}], nested_maps:get(['*', '*', '*'], Map, Parameters));
-        false ->
-            ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:get(['*', '*', '*'], Map, Parameters))
-    end,
+common_wildcard_get_exceptions(_Map, _Parameters) ->
     ok.
 
 %%% GROUP
@@ -404,6 +414,8 @@ group_non_strict_get_operations(Map, Parameters) ->
 
     ?TRY([v3_1_1], nested_maps:get([[k1_2, ne_key], [k2_1, ne_key], [k3_1, ne_key]], Map, Parameters#{strict => false})),
     ?TRY([], nested_maps:get([[ne_key, k1_3], [ne_key, k2_2], [ne_key, k3_3]], Map, Parameters#{strict => false})),
+    ?TRY([], nested_maps:get([[k1_1], [k2_1, k2_2], [k3_1]], Map, Parameters#{strict => false})),
+
     ok.
 
 common_group_get_operations(Map, Parameters) ->
@@ -415,6 +427,7 @@ common_group_get_operations(Map, Parameters) ->
 group_strict_get_exceptions(Map, Parameters) ->
     ok = common_group_get_exceptions(Map, Parameters#{strict => true}),
 
+    ?TRY({badmap, {[k2_1, k2_2], v1_1}, Map}, nested_maps:get([[k1_1], [k2_1, k2_2], [k3_1]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:get([[k1_2], [k2_1], [k3_1, ne_key]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:get([[k1_2], [k2_1, ne_key], [k3_1]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:get([[k1_2], [ne_key, k2_2], [k3_2]], Map, Parameters#{strict => true})),
@@ -427,14 +440,14 @@ group_strict_get_exceptions(Map, Parameters) ->
 
     ?TRY({badkey, ne_key}, nested_maps:get([[k1_2, ne_key], [k2_1, ne_key], [k3_1, ne_key]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:get([[ne_key, k1_3], [ne_key, k2_2], [ne_key, k3_2]], Map, Parameters#{strict => true})),
+
     ok.
 
 group_non_strict_get_exceptions(Map, Parameters) ->
-    ok = common_group_get_exceptions(Map, Parameters#{strict => false}),
+    common_group_get_exceptions(Map, Parameters#{strict => false}),
     ok.
 
-common_group_get_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1, k2_2], v1_1}, Map}, nested_maps:get([[k1_1], [k2_1, k2_2], [k3_1]], Map, Parameters)),
+common_group_get_exceptions(_Map, _Parameters) ->
     ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -461,6 +474,8 @@ simple_non_strict_get_with_operations(Map, Parameters) ->
 
     ?TRY([], nested_maps:get_with([[k1_2], [k2_1], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, Parameters#{strict => false})),
     ?TRY([], nested_maps:get_with([], ?FUN_GET_REMOVE_TAKE, Map, Parameters#{strict => false})),
+    ?TRY([], nested_maps:get_with([[k1_1], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, Parameters#{strict => false})),
+
     ok.
 
 common_simple_get_with_operations(Map, Parameters) ->
@@ -470,6 +485,8 @@ common_simple_get_with_operations(Map, Parameters) ->
 
 simple_strict_get_with_exceptions(Map, Parameters) ->
     ok = common_simple_get_with_exceptions(Map, #{strict => true}),
+
+    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:get_with([[k1_1], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:get_with([[k1_2], [k2_1], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], [], [ne_key]]},
          nested_maps:get_with([[k1_2], [], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, Parameters#{strict => true})),
@@ -495,7 +512,6 @@ common_simple_get_with_exceptions(Map, Parameters) ->
     ?TRY({badfun, {got_error, '*'}}, nested_maps:get_with([[k1_2], [k2_2], [k3_2]], ?BAD_FUN_ERROR, Map, Parameters)),
     ?TRY({badfun, {got_exit, '*'}}, nested_maps:get_with([[k1_2], [k2_2], [k3_2]], ?BAD_FUN_EXIT, Map, Parameters)),
 
-    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:get_with([[k1_1], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:get_with(not_a_list, ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:get_with([[k1_2], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
@@ -611,6 +627,8 @@ simple_non_strict_put_operations(Map, Parameters) ->
     ?TRY(Map, nested_maps:put([[k1_4], [], [k3_1]], v3_1, Map, Parameters#{strict => false})),
 
     ?TRY(Map, nested_maps:put([], v3_1, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:put([[k1_1], [k4_1], [k3_1]], v3_1, Map, Parameters#{strict => false})),
+
     ok.
 
 common_simple_put_operations(Map, Parameters) ->
@@ -642,6 +660,8 @@ common_simple_put_operations(Map, Parameters) ->
 
 simple_strict_put_exceptions(Map, Parameters) ->
     ok = common_simple_put_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:put([[k1_1], [k4_1], [k3_1]], v3_1, Map, Parameters#{strict => true})),
     ?TRY({badarg, {'Address', []}}, nested_maps:put([], v3_1_1_new, Map, Parameters#{strict => true})),
     ?TRY({badkey, k1_4}, nested_maps:put([[k1_4], [k4_1], [k3_1]], v3_1, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], [], [k3_1]]}, nested_maps:put([[k1_2], [], [k3_1]], v3_1_1_new, Map, Parameters#{strict => true})),
@@ -652,7 +672,6 @@ simple_non_strict_put_exceptions(Map, Parameters) ->
     ok.
 
 common_simple_put_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:put([[k1_1], [k4_1], [k3_1]], v3_1, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:put([[k1_2], [k2_1], [k3_2]], v3_1, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:put(not_a_list, v3_1, Map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
@@ -787,6 +806,8 @@ simple_non_strict_put_with_operations(Map, Parameters) ->
            k1_4 => #{k4_1 => #{k3_1 => 100}}}, nested_maps:put_with([[k1_4], [k4_1], [k3_1]], ?FUN_PUT, Map, Parameters#{strict => false})),
     ?TRY(Map, nested_maps:put_with([[k1_4], [], [k3_1]], ?FUN_PUT, Map, Parameters#{strict => false})),
     ?TRY(Map, nested_maps:put_with([], ?FUN_PUT, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:put_with([[k1_1], [k4_1], [k3_1]], ?FUN_PUT, Map, Parameters#{strict => false})),
+
     ok.
 
 common_simple_put_with_operations(Map, Parameters) ->
@@ -811,6 +832,7 @@ common_simple_put_with_operations(Map, Parameters) ->
 simple_strict_put_with_exceptions(Map, Parameters) ->
     ok = common_simple_put_with_exceptions(Map, Parameters#{strict => true}),
 
+    ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:put_with([[k1_1], [k4_1], [k3_1]], ?FUN_PUT, Map, Parameters#{strict => true})),
     ?TRY({badkey, k1_4}, nested_maps:put_with([[k1_4], [k4_1], [k3_1]], ?FUN_PUT, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], [], [k3_1]]}, nested_maps:put_with([[k1_2], [], [k3_1]], ?FUN_PUT, Map, Parameters#{strict => true})),
     ?TRY({badarg, {'Address', []}}, nested_maps:put_with([], ?FUN_PUT, Map, Parameters#{strict => true})),
@@ -830,7 +852,6 @@ common_simple_put_with_exceptions(Map, Parameters) ->
     ?TRY({badfun, {got_error, '*'}}, nested_maps:put_with([[k1_2], [k2_2], [k3_2]], ?BAD_FUN_ERROR3, Map, Parameters)),
     ?TRY({badfun, {got_exit, '*'}}, nested_maps:put_with([[k1_2], [k2_2], [k3_2]], ?BAD_FUN_EXIT3, Map, Parameters)),
 
-    ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:put_with([[k1_1], [k4_1], [k3_1]], ?FUN_PUT, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:put_with([[k1_2], [k2_1], [k3_2]], ?FUN_PUT, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:put_with(not_a_list, ?FUN_PUT, Map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
@@ -968,10 +989,14 @@ simple_non_strict_keys_operations(Map, Parameters) ->
     ?TRY([], nested_maps:keys([[ne_key], [k2_1], [k3_2]], Map, Parameters#{strict => false})),
     ?TRY([], nested_maps:keys([[k1_2], [ne_key], [k3_2]], Map, Parameters#{strict => false})),
     ?TRY([], nested_maps:keys([[k1_2], [k2_1], [ne_key]], Map, Parameters#{strict => false})),
+    ?TRY([], nested_maps:keys([[k1_1], [k2_1]], Map, Parameters#{strict => false})),
+
     ok.
 
 simple_strict_keys_exceptions(Map, Parameters) ->
     ok = common_simple_keys_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {[k2_1], v1_1}, Map}, nested_maps:keys([[k1_1], [k2_1]], Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[]]}, nested_maps:keys([[]], Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], []]}, nested_maps:keys([[k1_2], []], Map, Parameters#{strict => true})),
     ?TRY({badarg, {'Address', []}}, nested_maps:keys([], Map, Parameters#{strict => true})),
@@ -993,7 +1018,6 @@ common_simple_keys_operations(Map, Parameters) ->
     ok.
 
 common_simple_keys_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1], v1_1}, Map}, nested_maps:keys([[k1_1], [k2_1]], Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:keys([[k1_2], [k2_1], [k3_2]], not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:keys(not_a_list, Map, Parameters)),
     ?TRY({badarg, {'Options', not_strict}}, nested_maps:keys([[k1_2], [k2_1]], Map, not_strict)),
@@ -1110,11 +1134,14 @@ simple_non_strict_keys_with_operations(Map, Parameters) ->
     ?TRY([], nested_maps:keys_with([[ne_key], [k2_1], [k3_2]], ?FUN_KEYS, Map, Parameters#{strict => false})),
     ?TRY([], nested_maps:keys_with([[k1_2], [ne_key], [k3_2]], ?FUN_KEYS, Map, Parameters#{strict => false})),
     ?TRY([], nested_maps:keys_with([[k1_2], [k2_1], [ne_key]], ?FUN_KEYS, Map, Parameters#{strict => false})),
+    ?TRY([], nested_maps:keys_with([[k1_1], [k2_1]], ?FUN_KEYS, Map, Parameters#{strict => false})),
+
     ok.
 
 simple_strict_keys_with_exceptions(Map, Parameters) ->
     ok = common_simple_keys_with_exceptions(Map, Parameters#{strict => true}),
 
+    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:keys_with([[k1_1], [k2_1]], ?FUN_KEYS, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[]]}, nested_maps:keys_with([[]], ?FUN_KEYS, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], []]}, nested_maps:keys_with([[k1_2], []], ?FUN_KEYS, Map, Parameters#{strict => true})),
     ?TRY({badmap, v1_1, Map}, nested_maps:keys_with([[k1_1]], ?FUN_KEYS, Map, Parameters#{strict => true})),
@@ -1140,7 +1167,6 @@ common_simple_keys_with_operations(Map, Parameters) ->
     ok.
 
 common_simple_keys_with_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:keys_with([[k1_1], [k2_1]], ?FUN_KEYS, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:keys_with([[k1_2], [k2_1], [k3_2]], ?FUN_KEYS, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:keys_with(not_a_list, ?FUN_KEYS, Map, Parameters)),
     ?TRY({badarg, {'Options', not_strict}}, nested_maps:keys_with([[k1_2], [k2_1]], ?FUN_KEYS, Map, not_strict)),
@@ -1274,6 +1300,8 @@ simple_non_strict_update_operations(Map, Parameters) ->
     ?TRY(Map, nested_maps:update([[k1_2], [], [k3_1]], new_value, Map, Parameters#{strict => false})),
 
     ?TRY(Map, nested_maps:update([], new_value, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:update([[k1_1], [k2_1]], new_value, Map, Parameters#{strict => false})),
+
     ok.
 
 common_simple_update_operations(Map, Parameters) ->
@@ -1326,7 +1354,8 @@ simple_strict_update_exceptions(Map, Parameters) ->
     ?TRY({badkey, ne_key}, nested_maps:update([[k1_2], [ne_key]], new_value, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update([[ne_key]], new_value, Map, Parameters#{strict => true})),
 
-% Missing keys
+    % Missing keys
+    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:update([[k1_1], [k2_1]], new_value, Map, Parameters#{strict => true})),
     ?TRY({badarg, {'Address', []}}, nested_maps:update([], new_value, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[]]}, nested_maps:update([[]], new_value, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], []]}, nested_maps:update([[k1_2], []], new_value, Map, Parameters#{strict => true})),
@@ -1338,7 +1367,6 @@ simple_non_strict_update_exceptions(Map, Parameters) ->
     ok.
 
 common_simple_update_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:update([[k1_1], [k2_1]], new_value, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:update([[k1_2], [k2_1], [k3_2]], new_value, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:update(not_a_list, new_value, Map, Parameters)),
     ?TRY({badarg, {'Options', not_strict}}, nested_maps:update([[k1_2], [k2_1]], new_value, Map, not_strict)),
@@ -1380,6 +1408,11 @@ wildcard_non_strict_update_operations(Map, Parameters) ->
            k1_3 => #{}}, nested_maps:update([[k1_2], '*', [k3_3]], new_value, Map, Parameters#{strict => false})),
 
     ?TRY(Map, nested_maps:update([[k1_3], '*', [k3_2]], new_value, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:update([[k1_1], '*'], new_value, Map, Parameters#{strict => false})),
+    ?TRY(#{k1_1 => v1_1,
+           k1_2 => #{k2_1 => #{k3_1 => new_value,k3_2 => new_value},
+                     k2_2 => #{k3_2 => new_value, k3_3 => new_value}},
+           k1_3 => #{}}, nested_maps:update(['*', '*', '*'], new_value, Map, Parameters#{strict => false})),
     ok.
 
 common_wildcard_update_operations(Map, Parameters) ->
@@ -1405,6 +1438,8 @@ common_wildcard_update_operations(Map, Parameters) ->
     ok.
 wildcard_strict_update_exceptions(Map, Parameters) ->
     ok = common_wildcard_update_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:update([[k1_1], '*'], new_value, Map, Parameters#{strict => true})),
     ?TRY({badkey, k3_1}, nested_maps:update([[k1_2], '*', [k3_1]], new_value, Map, Parameters#{strict => true})),
     ?TRY({badkey, k3_3}, nested_maps:update([[k1_2], '*', [k3_3]], new_value, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update([[k1_2], [ne_key], '*'], new_value, Map, Parameters#{strict => true})),
@@ -1413,6 +1448,13 @@ wildcard_strict_update_exceptions(Map, Parameters) ->
     ?TRY({badkey, ne_key}, nested_maps:update([[ne_key], [k2_1], '*'], new_value, Map, Parameters#{strict => true})),
     ?TRY({unreachable_address, [[k1_3], '*', [k3_2]]},
          nested_maps:update([[k1_3], '*', [k3_2]], new_value, Map, Parameters#{strict => true})),
+
+    case maps:get(parallel, Parameters) of
+        true ->
+            ?TRYV([{badmap, {'*', v1_1}, Map}, {unreachable_address, ['*', '*', '*']}], nested_maps:update(['*', '*', '*'], new_value, Map, Parameters#{strict => true}));
+        false ->
+            ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:update(['*', '*', '*'], new_value, Map, Parameters#{strict => true}))
+    end,
     ok.
 
 wildcard_non_strict_update_exceptions(Map, Parameters) ->
@@ -1420,13 +1462,6 @@ wildcard_non_strict_update_exceptions(Map, Parameters) ->
     ok.
 
 common_wildcard_update_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:update([[k1_1], '*'], new_value, Map, Parameters)),
-    case maps:get(parallel, Parameters) of
-        true ->
-            ?TRYV([{badmap, {'*', v1_1}, Map}, {unreachable_address, ['*', '*', '*']}], nested_maps:update(['*', '*', '*'], new_value, Map, Parameters));
-        false ->
-            ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:update(['*', '*', '*'], new_value, Map, Parameters))
-    end,
     ok.
 
 %%% Group
@@ -1478,6 +1513,7 @@ group_non_strict_update_operations(Map, Parameters) ->
                      k2_2 => #{k3_2 => v3_2_2, k3_3 => v3_3_2}},
            k1_3 => #{}}, nested_maps:update([[k1_2, ne_key], [k2_1, ne_key], [k3_1, ne_key]], new_value, Map, Parameters#{strict => false})),
     ?TRY(Map, nested_maps:update([[ne_key, k1_3], [ne_key, k2_2], [ne_key, k3_3]], new_value, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:update([[k1_1], [k2_1, k2_2], [k3_1]], new_value, Map, Parameters#{strict => false})),
     ok.
 
 common_group_update_operations(Map, Parameters) ->
@@ -1497,6 +1533,8 @@ common_group_update_operations(Map, Parameters) ->
 
 group_strict_update_exceptions(Map, Parameters) ->
     ok = common_group_update_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {[k2_1,k2_2],v1_1}, Map}, nested_maps:update([[k1_1], [k2_1, k2_2], [k3_1]], new_value, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update([[k1_2], [k2_1], [k3_1, ne_key]], new_value, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update([[k1_2], [k2_1, ne_key], [k3_1]], new_value, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update([[k1_2], [ne_key, k2_2], [k3_2]], new_value, Map, Parameters#{strict => true})),
@@ -1514,8 +1552,7 @@ group_non_strict_update_exceptions(Map, Parameters) ->
     ok = common_group_update_exceptions(Map, Parameters#{strict => false}),
     ok.
 
-common_group_update_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1,k2_2],v1_1}, Map}, nested_maps:update([[k1_1], [k2_1, k2_2], [k3_1]], new_value, Map, Parameters)),
+common_group_update_exceptions(_Map, _Parameters) ->
     ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1540,8 +1577,10 @@ simple_strict_update_with_operations(Map, Parameters) ->
 
 simple_non_strict_update_with_operations(Map, Parameters) ->
     ok = common_simple_update_with_operations(Map, Parameters#{strict => false}),
+
     ?TRY(Map, nested_maps:update_with([], ?FUN_UPDATE, Map, Parameters#{strict => false})),
     ?TRY(Map, nested_maps:update_with([[k1_2], [k2_1], [ne_key]], ?FUN_UPDATE, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:update_with([[k1_1], [k4_1], [k3_1]], ?FUN_UPDATE, Map, Parameters#{strict => false})),
     ok.
 
 common_simple_update_with_operations(Map, Parameters) ->
@@ -1557,6 +1596,8 @@ common_simple_update_with_operations(Map, Parameters) ->
 
 simple_strict_update_with_exceptions(Map, Parameters) ->
     ok = common_simple_update_with_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:update_with([[k1_1], [k4_1], [k3_1]], ?FUN_UPDATE, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update_with([[k1_2], [k2_1], [ne_key]], ?FUN_UPDATE, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], [], [ne_key]]},
          nested_maps:update_with([[k1_2], [], [ne_key]], ?FUN_UPDATE, Map, Parameters#{strict => true})),
@@ -1574,7 +1615,6 @@ common_simple_update_with_exceptions(Map, Parameters) ->
     ?TRY({badfun, {got_error, '*'}}, nested_maps:update_with([[k1_2], [k2_2], [k3_2]], ?BAD_FUN_ERROR, Map, Parameters)),
     ?TRY({badfun, {got_exit, '*'}}, nested_maps:update_with([[k1_2], [k2_2], [k3_2]], ?BAD_FUN_EXIT, Map, Parameters)),
 
-    ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:update_with([[k1_1], [k4_1], [k3_1]], ?FUN_UPDATE, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:update_with([[k1_2], [k2_1], [k3_2]], ?FUN_UPDATE, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:update_with(not_a_list, ?FUN_UPDATE, Map, Parameters)),
@@ -1602,7 +1642,9 @@ wildcard_strict_update_with_operations(Map, Parameters) ->
 
 wildcard_non_strict_update_with_operations(Map, Parameters) ->
     ok = common_wildcard_update_with_operations(Map, Parameters#{strict => false}),
+
     ?TRY(Map, nested_maps:update_with([[k1_2], [ne_key], '*'], ?FUN_UPDATE, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:update_with([[k1_1], '*', '*'], ?FUN_UPDATE, Map, Parameters#{strict => false})),
     ok.
 
 common_wildcard_update_with_operations(Map, Parameters) ->
@@ -1618,6 +1660,8 @@ common_wildcard_update_with_operations(Map, Parameters) ->
 
 wildcard_strict_update_with_exceptions(Map, Parameters) ->
     ok = common_wildcard_update_with_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:update_with([[k1_1], '*', '*'], ?FUN_UPDATE, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update_with([[k1_2], '*', [ne_key]], ?FUN_UPDATE, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], [], '*']}, nested_maps:update_with([[k1_2], [], '*'], ?FUN_UPDATE, Map, Parameters#{strict => true})),
     ?TRY({unreachable_address, ['*']}, nested_maps:update_with(['*'], ?FUN_UPDATE, #{}, Parameters#{strict => true})),
@@ -1628,7 +1672,6 @@ wildcard_non_strict_update_with_exceptions(Map, Parameters) ->
     ok.
 
 common_wildcard_update_with_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:update_with([[k1_1], '*', '*'], ?FUN_UPDATE, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:update_with([[k1_2], '*', [k3_2]], ?FUN_UPDATE, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, '*']}},
          nested_maps:update_with([[k1_2], not_a_list, '*'], ?FUN_UPDATE, Map, Parameters)),
@@ -1652,10 +1695,12 @@ group_strict_update_with_operations(Map, Parameters) ->
 
 group_non_strict_update_with_operations(Map, Parameters) ->
     ok = common_group_update_with_operations(Map, Parameters#{strict => false}),
+
     ?TRY(#{k1_1 => v1_1,
            k1_2 => #{k2_1 => #{k3_1 => 10, k3_2 => 20},
                      k2_2 => #{k3_2 => 31, k3_3 => 41}},
            k1_3 => #{}}, nested_maps:update_with([[k1_2], [ne_key, k2_2], '*'], ?FUN_UPDATE, Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:update_with([[k1_1], [k2_1, k2_2], [k3_1]], ?FUN_UPDATE, Map, Parameters#{strict => false})),
     ok.
 
 common_group_update_with_operations(Map, Parameters) ->
@@ -1667,6 +1712,7 @@ common_group_update_with_operations(Map, Parameters) ->
 
 group_strict_update_with_exceptions(Map, Parameters) ->
     ok = common_group_update_with_exceptions(Map, Parameters#{strict => true}),
+    ?TRY({badmap, {[k2_1,k2_2],v1_1}, Map}, nested_maps:update_with([[k1_1], [k2_1, k2_2], [k3_1]], ?FUN_UPDATE, Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:update_with([[k1_2], [k2_1, k2_2], [ne_key]], ?FUN_UPDATE, Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], [k2_1, k2_2], []]},
          nested_maps:update_with([[k1_2], [k2_1, k2_2], []], ?FUN_UPDATE, Map, Parameters#{strict => true})),
@@ -1677,7 +1723,6 @@ group_non_strict_update_with_exceptions(Map, Parameters) ->
     ok.
 
 common_group_update_with_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1,k2_2],v1_1}, Map}, nested_maps:update_with([[k1_1], [k2_1, k2_2], [k3_1]], ?FUN_UPDATE, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:update_with([[k1_1], [k2_1, k2_2], [k3_1]], ?FUN_UPDATE, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], [k2_1, k2_2], not_a_list]}},
@@ -1722,6 +1767,8 @@ simple_non_strict_remove_operations(Map, Parameters) ->
     ?TRY(Map, nested_maps:remove([[k1_2], [], [k3_1]], Map, Parameters#{strict => false})),
 
     ?TRY(Map, nested_maps:remove([], Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:remove([[k1_1], [k2_1]], Map, Parameters#{strict => false})),
+
     ok.
 
 common_simple_remove_operations(Map, Parameters) ->
@@ -1770,7 +1817,8 @@ simple_strict_remove_exceptions(Map, Parameters) ->
     ?TRY({badkey, ne_key}, nested_maps:remove([[k1_2], [ne_key]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:remove([[ne_key]], Map, Parameters#{strict => true})),
 
-% Missing keys
+    % Missing keys
+    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:remove([[k1_1], [k2_1]], Map, Parameters#{strict => true})),
     ?TRY({badarg, {'Address', []}}, nested_maps:remove([], Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[]]}, nested_maps:remove([[]], Map, Parameters#{strict => true})),
     ?TRY({bad_address, [[k1_2], []]}, nested_maps:remove([[k1_2], []], Map, Parameters#{strict => true})),
@@ -1782,7 +1830,6 @@ simple_non_strict_remove_exceptions(Map, Parameters) ->
     ok.
 
 common_simple_remove_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:remove([[k1_1], [k2_1]], Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:remove([[k1_2], [k2_1], [k3_2]], not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:remove(not_a_list, Map, Parameters)),
     ?TRY({badarg, {'Options', not_strict}}, nested_maps:remove([[k1_2], [k2_1]], Map, not_strict)),
@@ -1822,6 +1869,7 @@ wildcard_non_strict_remove_operations(Map, Parameters) ->
                      k2_2 => #{k3_2 => v3_2_2}},
            k1_3 => #{}}, nested_maps:remove([[k1_2], '*', [k3_3]], Map, Parameters#{strict => false})),
     ?TRY(Map, nested_maps:remove([[k1_3], '*', [k3_2]], Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:remove([[k1_1], '*'], Map, Parameters#{strict => false})),
     ok.
 
 common_wildcard_remove_operations(Map, Parameters) ->
@@ -1844,6 +1892,8 @@ common_wildcard_remove_operations(Map, Parameters) ->
 
 wildcard_strict_remove_exceptions(Map, Parameters) ->
     ok = common_wildcard_remove_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:remove([[k1_1], '*'], Map, Parameters#{strict => true})),
     ?TRY({badkey, k3_1}, nested_maps:remove([[k1_2], '*', [k3_1]], Map, Parameters#{strict => true})),
     ?TRY({badkey, k3_3}, nested_maps:remove([[k1_2], '*', [k3_3]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:remove([[k1_2], [ne_key], '*'], Map, Parameters#{strict => true})),
@@ -1857,9 +1907,7 @@ wildcard_non_strict_remove_exceptions(Map, Parameters) ->
     ok = common_wildcard_remove_exceptions(Map, Parameters#{strict => false}),
     ok.
 
-common_wildcard_remove_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:remove([[k1_1], '*'], Map, Parameters)),
-    ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:remove(['*', '*', '*'], Map, Parameters)),
+common_wildcard_remove_exceptions(_Map, _Parameters) ->
     ok.
 
 %%% Group
@@ -1911,6 +1959,8 @@ group_non_strict_remove_operations(Map, Parameters) ->
                      k2_2 => #{k3_2 => v3_2_2, k3_3 => v3_3_2}},
            k1_3 => #{}}, nested_maps:remove([[k1_2, ne_key], [k2_1, ne_key], [k3_1, ne_key]], Map, Parameters#{strict => false})),
     ?TRY(Map, nested_maps:remove([[ne_key, k1_3], [ne_key, k2_2], [ne_key, k3_3]], Map, Parameters#{strict => false})),
+    ?TRY(Map, nested_maps:remove([[k1_1], [k2_1, k2_2], [k3_1]], Map, Parameters#{strict => false})),
+
     ok.
 
 common_group_remove_operations(Map, Parameters) ->
@@ -1930,6 +1980,8 @@ common_group_remove_operations(Map, Parameters) ->
 
 group_strict_remove_exceptions(Map, Parameters) ->
     ok = common_group_remove_exceptions(Map, Parameters#{strict => true}),
+
+    ?TRY({badmap, {[k2_1,k2_2],v1_1}, Map}, nested_maps:remove([[k1_1], [k2_1, k2_2], [k3_1]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:remove([[k1_2], [k2_1], [k3_1, ne_key]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:remove([[k1_2], [k2_1, ne_key], [k3_1]], Map, Parameters#{strict => true})),
     ?TRY({badkey, ne_key}, nested_maps:remove([[k1_2], [ne_key, k2_2], [k3_2]], Map, Parameters#{strict => true})),
@@ -1947,8 +1999,7 @@ group_non_strict_remove_exceptions(Map, Parameters) ->
     ok = common_group_remove_exceptions(Map, Parameters#{strict => false}),
     ok.
 
-common_group_remove_exceptions(Map, Parameters) ->
-    ?TRY({badmap, {[k2_1,k2_2],v1_1}, Map}, nested_maps:remove([[k1_1], [k2_1, k2_2], [k3_1]], Map, Parameters)),
+common_group_remove_exceptions(_Map, _Parameters) ->
     ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

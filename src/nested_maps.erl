@@ -970,7 +970,7 @@ handle_element(Key, _IsValueExists, ExistedValue, Acc, Map,
         end;
 
 handle_element(_Key, _IsValueExists, ExistedValue, _Acc, _Map,
-    #params{op = keys, strict = true} = _Parameters) ->
+    #params{op = keys, strict = true}) ->
         erlang:error({badmap, ExistedValue});
 
 handle_element(_Key, _IsValueExists, _ExistedValue, Acc, Map,
@@ -1064,8 +1064,11 @@ key_handler(Key, Keys, Acc, Map, #params{strict = Strict} = Parameters) ->
                   Acc :: list(),
                   Map1 :: map(),
                   Parameters :: #params{strict :: true}) -> Map2 :: map().
-handle_keys([Keys | _Tail], _Acc, Map, _Parameters) when not is_map(Map) ->
+handle_keys([Keys | _Tail], _Acc, Map, #params{strict = true}) when not is_map(Map) ->
     erlang:error({badmap, {Keys, Map}});
+
+handle_keys([_Keys | _Tail], _Acc, Map,  #params{strict = false}) when not is_map(Map) ->
+    {nothing, nothing};
 
 handle_keys(['*' | Tail] = Address, Acc, Map, #params{strict = Strict} = Parameters) ->
     AllKeys = maps:keys(Map),
