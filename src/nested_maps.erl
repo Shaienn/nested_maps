@@ -161,7 +161,9 @@
     op_type = undefined :: collect | modify | multitask,
     strict = undefined :: boolean(),
     address = undefined :: strict_address() | address(),
-    parallel = false :: boolean()
+    parallel = false :: boolean(),
+    master_pid = undefined :: pid(),
+    timeout = 5000 :: non_neg_integer()
 }).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -229,8 +231,8 @@ get([_H | _T] = Address, Map, Options)
         address = Address,
         op      = ?FUNCTION_NAME,
         op_type = get_operation_type(?FUNCTION_NAME),
-        strict  = maps:get(strict, Options, false)
-        %parallel = maps:get(parallel, Options, false)
+        strict  = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 get(Address, Map, Options) ->
@@ -275,8 +277,8 @@ get_with([_H | _T] = Address, Function, Map, Options)
         function = Function,
         op       = ?FUNCTION_NAME,
         op_type  = get_operation_type(?FUNCTION_NAME),
-        strict   = maps:get(strict, Options, false)
-        %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 get_with(Address, Function, Map, Options) ->
@@ -343,8 +345,8 @@ keys([_H | _T] = Address, Map, Options)
         address = Address,
         op      = ?FUNCTION_NAME,
         op_type = get_operation_type(?FUNCTION_NAME),
-        strict   = maps:get(strict, Options, false)
-        %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 keys(Address, Map, Options) ->
@@ -393,8 +395,8 @@ keys_with([_H | _T] = Address, Function, Map, Options)
         function = Function,
         op       = ?FUNCTION_NAME,
         op_type  = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 keys_with(Address, Function, Map, Options) ->
@@ -463,8 +465,8 @@ put([_H | _T] = Address, Value, Map, Options)
         value   = Value,
         op      = ?FUNCTION_NAME,
         op_type = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 put(Address, _Value, Map, Options) ->
@@ -512,8 +514,8 @@ put_with([_H | _T] = Address, Function, Map, Options)
         function = Function,
         op       = ?FUNCTION_NAME,
         op_type  = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 put_with(Address, Function, Map, Options) ->
@@ -581,8 +583,8 @@ update([_H | _T] = Address, Value, Map, Options)
         value   = Value,
         op      = ?FUNCTION_NAME,
         op_type = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 update(Address, _Value, Map, Options) ->
@@ -627,8 +629,8 @@ update_with([_H | _T] = Address, Function, Map, Options)
         function = Function,
         op       = ?FUNCTION_NAME,
         op_type  = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 update_with(Address, Function, Map, Options) ->
@@ -692,8 +694,8 @@ remove([_H | _T] = Address, Map, Options)
         address = Address,
         op      = ?FUNCTION_NAME,
         op_type = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 remove(Address, Map, Options) ->
@@ -740,8 +742,8 @@ remove_with([_H | _T] = Address, Function, Map, Options)
         function = Function,
         op       = ?FUNCTION_NAME,
         op_type  = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 remove_with(Address, Function, Map, Options) ->
@@ -810,8 +812,8 @@ take([_H | _T] = Address, Map, Options)
         address = Address,
         op      = ?FUNCTION_NAME,
         op_type = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 take(Address, Map, Options) ->
@@ -860,8 +862,8 @@ take_with([_H | _T] = Address, Function, Map, Options)
         function = Function,
         op       = ?FUNCTION_NAME,
         op_type  = get_operation_type(?FUNCTION_NAME),
-      strict   = maps:get(strict, Options, false)
-      %parallel = maps:get(parallel, Options, false)
+        strict   = maps:get(strict, Options, false),
+        parallel = maps:get(parallel, Options, false)
     });
 
 take_with(Address, Function, Map, Options) ->
@@ -890,145 +892,142 @@ take_with(Address, Function, Map, Options) ->
 handle_element(_Key, _IsValueExists, ExistedValue, Acc, Map, #params{op = get} = _Parameters) ->
     {[ExistedValue | Acc], Map};
 
-handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, #params{op       = get_with,
-                                                                    function = Function} = _Parameters) ->
-    try Function(Key, ExistedValue) of
-        true ->
-            {[ExistedValue | Acc], Map};
-        false ->
-            {Acc, Map};
-        _ ->
-            erlang:error({badarg, {'Function', Function}})
-    catch
-        _:Error:StackTrace ->
-            erlang:error({badfun, {Error, StackTrace}})
-    end;
+handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, 
+    #params{op = get_with, function = Function} = _Parameters) ->
+        try Function(Key, ExistedValue) of
+            true ->
+                {[ExistedValue | Acc], Map};
+            false ->
+                {Acc, Map};
+            _ ->
+                erlang:error({badarg, {'Function', Function}})
+        catch
+            _:Error:StackTrace ->
+                erlang:error({badfun, {Error, StackTrace}})
+        end;
 
 handle_element(Key, _IsValueExists, _ExistedValue, _Acc, Map,
-               #params{op = put, value = Value}) ->
-    {[], maps:put(Key, Value, Map)};
+    #params{op = put, value = Value}) ->
+        {[], maps:put(Key, Value, Map)};
 
-handle_element(Key, IsValueExists, ExistedValue, Acc, Map, #params{op       = put_with,
-                                                                   function = Function}) ->
-    NewValue = try
-                   Function(Key, ExistedValue, IsValueExists)
-               catch
-                   _:Error:StackTrace ->
-                       erlang:error({badfun, {Error, StackTrace}})
-               end,
-    case NewValue of
-        ExistedValue -> {Acc, Map};
-        NewValue ->  {Acc, maps:put(Key, NewValue, Map)}
-    end;
+handle_element(Key, IsValueExists, ExistedValue, Acc, Map, 
+    #params{op = put_with, function = Function}) ->
+        NewValue = try
+                    Function(Key, ExistedValue, IsValueExists)
+                catch
+                    _:Error:StackTrace ->
+                        erlang:error({badfun, {Error, StackTrace}})
+                end,
+        case NewValue of
+            ExistedValue -> {Acc, Map};
+            NewValue ->  {Acc, maps:put(Key, NewValue, Map)}
+        end;
 
 handle_element(Key, _IsValueExists, _ExistedValue, Acc, Map,
-               #params{op = update, value = Value}) ->
-    {Acc, maps:put(Key, Value, Map)};
+    #params{op = update, value = Value}) ->
+        {Acc, maps:put(Key, Value, Map)};
 
-handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, #params{op       = update_with,
-                                                                    function = Function}) ->
-    NewValue = try
-                   Function(Key, ExistedValue)
-               catch
-                   _:Error:StackTrace ->
-                       erlang:error({badfun, {Error, StackTrace}})
-               end,
-    case NewValue of
-        ExistedValue -> {Acc, Map};
-        NewValue ->  {Acc, maps:put(Key, NewValue, Map)}
-    end;
+handle_element(Key, _IsValueExists, ExistedValue, Acc, Map,
+    #params{op = update_with, function = Function}) ->
+        NewValue = try
+                    Function(Key, ExistedValue)
+                catch
+                    _:Error:StackTrace ->
+                        erlang:error({badfun, {Error, StackTrace}})
+                end,
+        case NewValue of
+            ExistedValue -> {Acc, Map};
+            NewValue ->  {Acc, maps:put(Key, NewValue, Map)}
+        end;
 
 handle_element(Key, _IsValueExists, _ExistedValue, Acc, Map, #params{op = remove}) ->
     {Acc, maps:remove(Key, Map)};
 
-handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, #params{op       = remove_with,
-                                                                    function = Function}) ->
-    try Function(Key, ExistedValue) of
-        true ->
-            {Acc, maps:remove(Key, Map)};
-        false ->
-            {Acc, Map};
-        _ ->
-            erlang:error({badarg, {'Function', Function}})
-    catch
-        _:Error:StackTrace ->
-            erlang:error({badfun, {Error, StackTrace}})
-    end;
+handle_element(Key, _IsValueExists, ExistedValue, Acc, Map,
+    #params{op = remove_with, function = Function}) ->
+        try Function(Key, ExistedValue) of
+            true ->
+                {Acc, maps:remove(Key, Map)};
+            false ->
+                {Acc, Map};
+            _ ->
+                erlang:error({badarg, {'Function', Function}})
+        catch
+            _:Error:StackTrace ->
+                erlang:error({badfun, {Error, StackTrace}})
+        end;
 
-handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, #params{op     = keys,
-                                                                    strict = Strict} = _Parameters) when is_map(
-    ExistedValue) ->
-    Keys = maps:keys(ExistedValue),
-    case {Strict, Keys} of
-        {true, []} ->
-            erlang:error({badkey, Key});
-        {false, []} ->
-            {Acc, Map};
-        _ ->
-            {maps:keys(ExistedValue) ++ Acc, Map}
-    end;
+handle_element(Key, _IsValueExists, ExistedValue, Acc, Map,
+    #params{op = keys, strict = Strict} = _Parameters) when is_map(ExistedValue) ->
+        Keys = maps:keys(ExistedValue),
+        case {Strict, Keys} of
+            {true, []} ->
+                erlang:error({badkey, Key});
+            {false, []} ->
+                {Acc, Map};
+            _ ->
+                {maps:keys(ExistedValue) ++ Acc, Map}
+        end;
 
-handle_element(_Key, _IsValueExists, ExistedValue, _Acc, _Map, #params{op     = keys,
-                                                                       strict = true} = _Parameters) ->
-    erlang:error({badmap, ExistedValue});
+handle_element(_Key, _IsValueExists, ExistedValue, _Acc, _Map,
+    #params{op = keys, strict = true} = _Parameters) ->
+        erlang:error({badmap, ExistedValue});
 
 handle_element(_Key, _IsValueExists, _ExistedValue, Acc, Map,
-               #params{op = keys, strict = false} = _Parameters) ->
-    {Acc, Map};
+    #params{op = keys, strict = false} = _Parameters) ->
+        {Acc, Map};
 
-handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, #params{op       = keys_with,
-                                                                    function = Function,
-                                                                    strict   = Strict} = _Parameters) when is_map(
-    ExistedValue) ->
-    Keys = maps:keys(ExistedValue),
-    case {Strict, Keys} of
-        {true, []} ->
-            erlang:error({badkey, Key});
-        {false, []} ->
-            {Acc, Map};
-        _ ->
-            NewAcc = lists:foldl(fun(InnerKey, InnerAcc) ->
-                Value = maps:get(InnerKey, ExistedValue),
-                try Function(InnerKey, Value) of
-                    true ->
-                        [InnerKey | InnerAcc];
-                    false ->
-                        InnerAcc;
-                    _ ->
-                        erlang:error({badarg, {'Function', Function}})
-                catch
-                    _:Error:StackTrace ->
-                        erlang:error({badfun, {Error, StackTrace}})
-                end
-                                 end,
-                                 Acc, Keys),
-            {NewAcc, Map}
-    end;
+handle_element(Key, _IsValueExists, ExistedValue, Acc, Map,
+    #params{op = keys_with, function = Function, strict = Strict} = _Parameters) when is_map(ExistedValue) ->
+        Keys = maps:keys(ExistedValue),
+        case {Strict, Keys} of
+            {true, []} ->
+                erlang:error({badkey, Key});
+            {false, []} ->
+                {Acc, Map};
+            _ ->
+                NewAcc = lists:foldl(fun(InnerKey, AccIn) ->
+                    Value = maps:get(InnerKey, ExistedValue),
+                    try Function(InnerKey, Value) of
+                        true ->
+                            [InnerKey | AccIn];
+                        false ->
+                            AccIn;
+                        _ ->
+                            erlang:error({badarg, {'Function', Function}})
+                    catch
+                        _:Error:StackTrace ->
+                            erlang:error({badfun, {Error, StackTrace}})
+                    end
+                                    end,
+                                    Acc, Keys),
+                {NewAcc, Map}
+        end;
 
-handle_element(_Key, _IsValueExists, ExistedValue, _Acc, _Map, #params{op     = keys_with,
-                                                                       strict = true} = _Parameters) ->
-    erlang:error({badmap, ExistedValue});
+handle_element(_Key, _IsValueExists, ExistedValue, _Acc, _Map,
+    #params{op = keys_with, strict = true} = _Parameters) ->
+        erlang:error({badmap, ExistedValue});
 
-handle_element(_Key, _IsValueExists, _ExistedValue, Acc, Map, #params{op     = keys_with,
-                                                                      strict = false}) ->
-    {Acc, Map};
+handle_element(_Key, _IsValueExists, _ExistedValue, Acc, Map,
+    #params{op = keys_with, strict = false}) ->
+        {Acc, Map};
 
 handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, #params{op = take} = _Parameters) ->
     {[ExistedValue | Acc], maps:remove(Key, Map)};
 
-handle_element(Key, _IsValueExists, ExistedValue, Acc, Map, #params{op       = take_with,
-                                                                    function = Function} = _Parameters) ->
-    try Function(Key, ExistedValue) of
-        true ->
-            {[ExistedValue | Acc], maps:remove(Key, Map)};
-        false ->
-            {Acc, Map};
-        _ ->
-            erlang:error({badarg, {'Function', Function}})
-    catch
-        _:Error:StackTrace ->
-            erlang:error({badfun, {Error, StackTrace}})
-    end.
+handle_element(Key, _IsValueExists, ExistedValue, Acc, Map,
+    #params{op = take_with, function = Function} = _Parameters) ->
+        try Function(Key, ExistedValue) of
+            true ->
+                {[ExistedValue | Acc], maps:remove(Key, Map)};
+            false ->
+                {Acc, Map};
+            _ ->
+                erlang:error({badarg, {'Function', Function}})
+        catch
+            _:Error:StackTrace ->
+                erlang:error({badfun, {Error, StackTrace}})
+        end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Handle procedure
@@ -1065,14 +1064,8 @@ key_handler(Key, Keys, Acc, Map, #params{strict = Strict} = Parameters) ->
                   Acc :: list(),
                   Map1 :: map(),
                   Parameters :: #params{strict :: true}) -> Map2 :: map().
-handle_keys(_Address, _Acc, Map, _Parameters) when not is_map(Map) ->
-    throw(error_badmap);
-
-handle_keys([[] = _Head | _Tail] = _Address, _Acc, _Map, #params{strict = true} = Parameters) ->
-    erlang:error({bad_address, Parameters#params.address});
-
-handle_keys([[] = _Head | _Tail] = _Address, _Acc, _Map, #params{strict = false} = _Parameters) ->
-    throw(cancel_action);
+handle_keys([Keys | _Tail], _Acc, Map, _Parameters) when not is_map(Map) ->
+    erlang:error({badmap, {Keys, Map}});
 
 handle_keys(['*' | Tail] = Address, Acc, Map, #params{strict = Strict} = Parameters) ->
     AllKeys = maps:keys(Map),
@@ -1088,78 +1081,142 @@ handle_keys(['*' | Tail] = Address, Acc, Map, #params{strict = Strict} = Paramet
     end;
 
 handle_keys([Keys | Tail] = _Address, Acc, Map, #params{parallel = false} = Parameters) when is_list(Keys) ->
-    lists:foldl(fun(Key, {InnerAcc, InnerMap}) ->
+    lists:foldl(fun(Key, {AccIn, MapIn}) ->
         case key_handler(Key, Tail, Acc, Map, Parameters) of
             {element, IsValueExists, ExistedValue} ->
-                handle_element(Key, IsValueExists, ExistedValue, InnerAcc, InnerMap, Parameters);
+                handle_element(Key, IsValueExists, ExistedValue, AccIn, MapIn, Parameters);
             {NewAccValue, NewMapValue} ->
-                OuterAcc = case NewAccValue of
-                               nothing ->
-                                   InnerAcc;
-                               NewAccValue when is_list(NewAccValue) ->
-                                   InnerAcc ++ NewAccValue
-                           end,
-                OuterMap = case NewMapValue of
-                               nothing ->
-                                   InnerMap;
-                               NewMapValue ->
-                                   maps:put(Key, NewMapValue, InnerMap)
-                           end,
-                {OuterAcc, OuterMap}
+                AccOut = case NewAccValue of
+                    nothing ->
+                        AccIn;
+                    NewAccValue when is_list(NewAccValue) ->
+                        AccIn ++ NewAccValue
+                end,
+                MapOut = case NewMapValue of
+                    nothing ->
+                        MapIn;
+                    NewMapValue ->
+                        maps:put(Key, NewMapValue, MapIn)
+                end,
+                {AccOut, MapOut}
         end
                 end, {Acc, Map}, Keys);
 
-%%handle_keys([Keys | Tail] = _Address, Acc, Map, #params{parallel = true} = Parameters) when is_list(Keys) ->
-%%
-%%    KeyHandlerParallelFun = fun(From, Key) ->
-%%        Result = key_handler(Key, Tail, Acc, Map, Parameters),
-%%        From ! {Key, Result}
-%%                            end,
-%%
-%%    Self = self(),
-%%    KeyHandlerPids = [spawn_link(fun() -> KeyHandlerParallelFun(Self, Key) end) || Key <- Keys],
-%%    Results = [begin
-%%                   receive
-%%                       {_Key, {_NewAcc, _NewMap}} = Msg -> Msg;
-%%                       {_Key, {element, _IsValueExists, _ExistedValue}} = Msg -> Msg
-%%                   after 5000 ->
-%%                        error(timeout)
-%%                   end
-%%               end || _Num <- lists:seq(1, length(KeyHandlerPids))],
-%%    lists:foldl(fun({Key, {element, IsValueExists, ExistedValue}},  {InnerAcc, InnerMap}) ->
-%%                        handle_element(Key, IsValueExists, ExistedValue, InnerAcc, InnerMap, Parameters);
-%%                   ({Key, {NewAcc, NewValue}}, {InnerAcc, InnerMap}) ->
-%%        OuterAcc = case NewAcc of
-%%                       nothing ->
-%%                           InnerAcc;
-%%                       NewAcc when is_list(NewAcc) ->
-%%                           InnerAcc ++ NewAcc
-%%                   end,
-%%        OuterMap = case NewValue of
-%%                       nothing ->
-%%                           InnerMap;
-%%                       NewValue ->
-%%                           maps:put(Key, NewValue, InnerMap)
-%%                   end,
-%%        {OuterAcc, OuterMap}
-%%                end,
-%%        {Acc, Map}, Results);
+
+handle_keys([[Key] | Tail] = _Address, Acc, Map, #params{parallel = true} = Parameters) ->
+    case key_handler(Key, Tail, Acc, Map, Parameters) of
+        {element, IsValueExists, ExistedValue} ->
+            handle_element(Key, IsValueExists, ExistedValue, Acc, Map, Parameters);
+        {NewAccValue, NewMapValue} ->
+            AccOut = case NewAccValue of
+                nothing ->
+                    Acc;
+                NewAccValue when is_list(NewAccValue) ->
+                    Acc ++ NewAccValue
+            end,
+            MapOut = case NewMapValue of
+                nothing ->
+                    Map;
+                NewMapValue ->
+                    maps:put(Key, NewMapValue, Map)
+            end,
+            {AccOut, MapOut}
+    end;
+     
+handle_keys([[_|_] = Keys | Tail] = _Address, Acc, Map, #params{parallel = true, master_pid = MasterPid} = Parameters) ->
+    Self = self(),
+    KeyHandlerParallelFun = fun(From, Key) -> From ! {Key, key_handler(Key, Tail, Acc, Map, Parameters)} end,
+
+    KeyHandlerPids = [{spawn_link(fun() -> 
+        try
+            % To receive erlang:error 'EXIT' message from deeply nested worker directly in master process 
+            erlang:link(MasterPid)
+        catch
+            % In case of MasterPid is closed due to error in another branch 
+            error:noproc -> noproc
+        end,
+    KeyHandlerParallelFun(Self, Key) end), Key} || Key <- Keys],
+
+    Results = [begin
+        receive
+            {Key, {_NewAcc, _NewMap}} = Msg -> Msg;
+            {Key, {element, _IsValueExists, _ExistedValue}} = Msg -> Msg
+        end
+    end || {Pid, Key} <- KeyHandlerPids, is_pid(Pid)],
+
+    lists:foldl(fun
+        ({Key, {element, IsValueExists, ExistedValue}},  {AccIn, MapIn}) ->
+            handle_element(Key, IsValueExists, ExistedValue, AccIn, MapIn, Parameters);
+        ({Key, {NewAcc, NewValue}}, {AccIn, MapIn}) ->
+            AccOut = case NewAcc of
+                nothing ->
+                    AccIn;
+                NewAcc when is_list(NewAcc) ->
+                    AccIn ++ NewAcc
+            end,
+            MapOut = case NewValue of
+                nothing ->
+                    MapIn;
+                NewValue ->
+                    maps:put(Key, NewValue, MapIn)
+            end,
+            {AccOut, MapOut}
+    end, {Acc, Map}, Results);
 
 handle_keys([Head | _Tail] = _Address, _Acc, _Map, Parameters) when not is_list(Head) ->
     erlang:error({badarg, {'Address', Parameters#params.address}}).
 
+master_process(Address, Map, Parameters, ConsumerPid, MasterPid) ->
+    % Isolate trap_exit from consumer process by starting of master process 
+    process_flag(trap_exit, true),
+    spawn_link(fun() -> ConsumerPid ! {ok, handle_keys(Address, [], Map, Parameters#params{master_pid = MasterPid})} end),
+    receive
+        {'EXIT', _Pid, {{badmap, LocalMap}, _Stack}}  ->
+            % It is handled separately to add full Map into the error message
+            ConsumerPid ! {error, {badmap, LocalMap, Map}};
+        {'EXIT', _Pid, {Reason, _Stack}} when Reason /= normal ->
+            ConsumerPid ! {error, Reason}
+    end.
+
+start_handle_keys(Address, [], Map, #params{parallel = true, timeout = Timeout} = Parameters) ->
+    ConsumerPid = self(),
+    spawn(fun() -> master_process(Address, Map, Parameters, ConsumerPid, self()) end),
+    receive
+        {ok, Result} -> Result;
+        {error, Reason} -> erlang:error(Reason)
+    after Timeout ->
+        erlang:error(timeout)
+    end;
+    
+start_handle_keys(Address, [], Map, #params{} = Parameters) ->
+    try 
+        handle_keys(Address, [], Map, Parameters)
+    catch
+        error:{badmap, LocalMap} ->
+            % It is handled separately to add full Map into the error message
+            erlang:error({badmap, LocalMap, Map})
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helpers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-handle_procedure_wrapper(Address, Map, #params{op_type = Type} = Parameters) ->
-    handle_return_value(try
-                            handle_keys(Address, [], Map, Parameters)
-                        catch
-                            throw:cancel_action -> {[], Map};
-                            throw:error_badmap ->
-                                erlang:error({badmap, Map})
-                        end, Type).
+handle_procedure_wrapper(Address, Map, #params{op_type = Type, strict = Strict} = Parameters) ->
+    handle_return_value(case {Strict, validate_address(Address)} of
+        {_, valid} ->
+            start_handle_keys(Address, [], Map, Parameters);
+        {true, invalid} ->
+            erlang:error({bad_address, Parameters#params.address});
+        {false, invalid} ->
+            {[], Map}
+    end, Type).
+
+validate_address(Address) ->
+    case lists:any(fun(E) -> E == [] end , Address) of
+        true ->
+            invalid;
+        false ->
+            valid
+    end.
 
 is_alowed_to_create_new_element(#params{op = put})      -> true;
 is_alowed_to_create_new_element(#params{op = put_with}) -> true;
