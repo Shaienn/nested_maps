@@ -1169,8 +1169,9 @@ handle_keys([[_|_] = Keys | Tail] = _Address, Acc, Map, #params{parallel = true,
 handle_keys([Head | _Tail] = _Address, _Acc, _Map, Parameters) when not is_list(Head) ->
     erlang:error({badarg, {'Address', Parameters#params.address}}).
 
-master_process(Address, Map, Parameters, ConsumerPid, MasterPid) ->
-    % Isolate trap_exit from consumer process by starting of master process 
+master_process(Address, Map, Parameters, ConsumerPid) ->
+    MasterPid = self(),
+    % Isolate trap_exit from consumer process by starting of master process
     process_flag(trap_exit, true),
     spawn_link(fun() -> ConsumerPid ! {ok, handle_keys(Address, [], Map, Parameters#params{master_pid = MasterPid})} end),
     receive
@@ -1183,7 +1184,7 @@ master_process(Address, Map, Parameters, ConsumerPid, MasterPid) ->
 
 start_handle_keys(Address, [], Map, #params{parallel = true, timeout = Timeout} = Parameters) ->
     ConsumerPid = self(),
-    spawn(fun() -> master_process(Address, Map, Parameters, ConsumerPid, self()) end),
+    spawn(fun() -> master_process(Address, Map, Parameters, ConsumerPid) end),
     receive
         {ok, Result} -> Result;
         {error, Reason} -> erlang:error(Reason)
@@ -1199,6 +1200,8 @@ start_handle_keys(Address, [], Map, #params{} = Parameters) ->
             % It is handled separately to add full Map into the error message
             erlang:error({badmap, LocalMap, Map})
     end.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helpers
