@@ -5,7 +5,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -export([
-    all/0
+    all/0,
+    groups/0
 ]).
 
 
@@ -102,8 +103,10 @@
 %%% API Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-all() ->
-    [
+all() -> [{group, all_tests}].
+
+groups() ->
+    [{all_tests, [parallel], [
         %%% GET
 
         simple_get_operation,
@@ -176,7 +179,7 @@ all() ->
         simple_take_with_operations,
         wildcard_take_with_operations,
         group_take_with_operations
-    ].
+    ]}].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Construction and Destruction for the Test Suite
