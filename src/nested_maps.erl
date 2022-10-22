@@ -161,9 +161,7 @@
   op = undefined :: get | get_with | put | put_with | update | update_with | remove | remove_with | keys | keys_with | take | take_with,
   op_type = undefined :: collect | modify | multitask,
   strict = undefined :: boolean(),
-  address = undefined :: strict_address() | address(),
-  master_pid = undefined :: pid(),
-  timeout = 5000 :: non_neg_integer()
+  address = undefined :: strict_address() | address()
 }).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
