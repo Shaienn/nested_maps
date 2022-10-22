@@ -143,5 +143,19 @@ Or we want to get `k3_2` values from both of branches:
    [v3_2_1, v3_2_2] = nested_maps:get([[k1_2], '*', [k3_2]], Map, #{strict => false})
 ```
 
+There are implemented methods for maps manipulation. They are well covered by unit tests and documented inline
 
-
+```
+ get
+ get_with
+ put
+ put_with
+ update
+ update_with
+ remove
+ remove_with
+ keys
+ keys_with
+ take
+ take_with
+```
