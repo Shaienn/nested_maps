@@ -130,13 +130,13 @@ And we want to get value of `k3_2` key:
    [v3_2_1] = nested_maps:get([[k1_2], [k2_1], [k3_2]], Map, #{strict => false})
 ```
 
-Or we want to get all values of `k2_2` key:
+Or we want to get values from all keys next after `k2_2` key:
 
 ```
    [v3_2_2, v3_3_2] = nested_maps:get([[k1_2], [k2_2], '*'], Map, #{strict => false})
 ```
 
-Or we want to get values of `k3_2` from both of branches:
+Or we want to get `k3_2` values from both of branches:
 
 ```
    [v3_2_1, v3_2_2] = nested_maps:get([[k1_2], [k2_1, k2_2], [k3_2]], Map, #{strict => false})
