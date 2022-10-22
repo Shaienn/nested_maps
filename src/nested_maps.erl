@@ -126,7 +126,6 @@
 %%%-----------------------------------------------------------------------------
 
 -module(nested_maps).
--compile({inline, [handle_procedure_wrapper/3, get_operation_type/1]}).
 
 %%%API
 -export([
@@ -144,15 +143,17 @@
   take_with/4
 ]).
 
--type address() :: list(list(LevelNKeyN :: any()) | '*').
+-type key() :: any().
 
--type strict_address() :: nonempty_list(nonempty_list(LevelNKeyN :: any()) | '*').
+-type address() :: list(list(LevelNKeyN :: key()) | '*').
 
--type filter_fun() :: fun((EndKey :: any(), EndValue :: any()) -> boolean()).
+-type strict_address() :: nonempty_list(nonempty_list(LevelNKeyN :: key()) | '*').
 
--type modify_fun2() :: fun((EndKey :: any(), EndValue :: any()) -> any()).
+-type filter_fun() :: fun((EndKey :: key(), EndValue :: any()) -> boolean()).
 
--type modify_fun3() :: fun((EndKey :: any(), EndValue :: any(), IsValueExists :: boolean()) -> any()).
+-type modify_fun2() :: fun((EndKey :: key(), EndValue :: any()) -> any()).
+
+-type modify_fun3() :: fun((EndKey :: key(), EndValue :: any(), IsValueExists :: boolean()) -> any()).
 
 -record(params, {
   function = undefined :: filter_fun() | modify_fun2() | modify_fun3() | undefined,
@@ -161,7 +162,6 @@
   op_type = undefined :: collect | modify | multitask,
   strict = undefined :: boolean(),
   address = undefined :: strict_address() | address(),
-  parallel = false :: boolean(),
   master_pid = undefined :: pid(),
   timeout = 5000 :: non_neg_integer()
 }).
@@ -213,8 +213,6 @@
 %%%
 %%%  ``{badarg, {'Map', Map}}'' exception if `Map' is not `map()'.
 %%%
-%%%  ``{badarg, {'Strict', Strict}}'' exception if `Strict' is not `boolean()'.
-%%%
 %%%  ``{badmap, Map}'' exception if a non-end key from `Address' is not associated with a map in `Map'.
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -225,18 +223,17 @@
         Map :: map(),
         #{strict => true}) -> list(Value :: any()).
 
-get([_H | _T] = Address, Map, Parameters)
+get(Address, Map, Parameters)
   when is_list(Address), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 get(Address, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Map, Parameters).
+  bad_argument_handler(Address, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -271,19 +268,18 @@ get(Address, Map, Parameters) ->
         Function :: filter_fun(),
         Map :: map(),
         #{strict => false}) -> list(Value :: any()).
-get_with([_H | _T] = Address, Function, Map, Parameters)
+get_with(Address, Function, Map, Parameters)
   when is_list(Address), is_function(Function, 2), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     function = Function,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 get_with(Address, Function, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Function, 2, Map, Parameters).
+  bad_argument_handler(Address, Function, 2, Map, Parameters).
 
 
 %%%-----------------------------------------------------------------------------
@@ -329,8 +325,6 @@ get_with(Address, Function, Map, Parameters) ->
 %%%
 %%%  ``{badarg, {'Map', Map}}'' exception if `Map' is not `map()'.
 %%%
-%%%  ``{badarg, {'Strict', Strict}}'' exception if `Strict' is not `boolean()'.
-%%%
 %%%  ``{badmap, Map}'' exception if a non-end key from `Address' is not associated with a map in `Map'.
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -340,18 +334,17 @@ get_with(Address, Function, Map, Parameters) ->
     (Address :: address(),
         Map :: map(),
         #{strict => true}) -> list(Value :: any()).
-keys([_H | _T] = Address, Map, Parameters)
+keys(Address, Map, Parameters)
   when is_list(Address), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 keys(Address, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Map, Parameters).
+  bad_argument_handler(Address, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -390,19 +383,18 @@ keys(Address, Map, Parameters) ->
         Function :: filter_fun(),
         Map1 :: map(),
         #{strict => false}) -> list(Value :: any()).
-keys_with([_H | _T] = Address, Function, Map, Parameters)
+keys_with(Address, Function, Map, Parameters)
   when is_list(Address), is_function(Function, 2), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     function = Function,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 keys_with(Address, Function, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Function, 2, Map, Parameters).
+  bad_argument_handler(Address, Function, 2, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -447,8 +439,6 @@ keys_with(Address, Function, Map, Parameters) ->
 %%%
 %%%  ``{badarg, {'Map1', Map1}}'' exception if `Map1' is not `map()'.
 %%%
-%%%  ``{badarg, {'Strict', Strict}}'' exception if `Strict' is not `boolean()'.
-%%%
 %%%  ``{badmap, Map1}'' exception if a non-end key from `Address' is not associated with a map in `Map1'.
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -460,19 +450,18 @@ keys_with(Address, Function, Map, Parameters) ->
         Value :: any(),
         Map1 :: map(),
         #{strict => false}) -> Map2 :: map().
-put([_H | _T] = Address, Value, Map, Parameters)
+put(Address, Value, Map, Parameters)
   when is_list(Address), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     value = Value,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 put(Address, _Value, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Map, Parameters).
+  bad_argument_handler(Address, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -510,19 +499,18 @@ put(Address, _Value, Map, Parameters) ->
         Function :: modify_fun3(),
         Map1 :: map(),
         #{strict => false}) -> Map2 :: map().
-put_with([_H | _T] = Address, Function, Map, Parameters)
+put_with(Address, Function, Map, Parameters)
   when is_list(Address), is_function(Function, 3), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     function = Function,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 put_with(Address, Function, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Function, 3, Map, Parameters).
+  bad_argument_handler(Address, Function, 3, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -566,8 +554,6 @@ put_with(Address, Function, Map, Parameters) ->
 %%%
 %%%  ``{badarg, {'Map1', Map1}}'' exception if `Map1' is not `map()'.
 %%%
-%%%  ``{badarg, {'Strict', Strict}}'' exception if `Strict' is not `boolean()'.
-%%%
 %%%  ``{badmap, Map1}'' exception if a non-end key from `Address' is not associated with a map in `Map1'.
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -579,19 +565,18 @@ put_with(Address, Function, Map, Parameters) ->
         Value :: any(),
         Map1 :: map(),
         #{strict => false}) -> Map2 :: map().
-update([_H | _T] = Address, Value, Map, Parameters)
+update(Address, Value, Map, Parameters)
   when is_list(Address), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     value = Value,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 update(Address, _Value, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Map, Parameters).
+  bad_argument_handler(Address, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -625,19 +610,18 @@ update(Address, _Value, Map, Parameters) ->
         Function :: modify_fun2(),
         Map1 :: map(),
         #{strict => false}) -> Map2 :: map().
-update_with([_H | _T] = Address, Function, Map, Parameters)
+update_with(Address, Function, Map, Parameters)
   when is_list(Address), is_function(Function, 2), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     function = Function,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 update_with(Address, Function, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Function, 2, Map, Parameters).
+  bad_argument_handler(Address, Function, 2, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -680,8 +664,6 @@ update_with(Address, Function, Map, Parameters) ->
 %%%
 %%%  ``{badarg, {'Map1', Map1}}'' exception if `Map1' is not `map()'.
 %%%
-%%%  ``{badarg, {'Strict', Strict}}'' exception if `Strict' is not `boolean()'.
-%%%
 %%%  ``{badmap, Map1}'' exception if a non-end key from `Address' is not associated with a map in `Map1'.
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -691,18 +673,17 @@ update_with(Address, Function, Map, Parameters) ->
     (Address :: address(),
         Map1 :: map(),
         #{strict => false}) -> Map2 :: map().
-remove([_H | _T] = Address, Map, Parameters)
+remove(Address, Map, Parameters)
   when is_list(Address), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 remove(Address, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Map, Parameters).
+  bad_argument_handler(Address, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -731,7 +712,6 @@ remove(Address, Map, Parameters) ->
 %%% @end
 %%%-----------------------------------------------------------------------------
 -spec remove_with(Address :: strict_address(),
-
     Function :: modify_fun2(),
     Map1 :: map(),
     #{strict => true}) -> Map2 :: map();
@@ -739,19 +719,18 @@ remove(Address, Map, Parameters) ->
         Function :: modify_fun2(),
         Map1 :: map(),
         #{strict => false}) -> Map2 :: map().
-remove_with([_H | _T] = Address, Function, Map, Parameters)
+remove_with(Address, Function, Map, Parameters)
   when is_list(Address), is_function(Function, 2), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     function = Function,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 remove_with(Address, Function, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Function, 2, Map, Parameters).
+  bad_argument_handler(Address, Function, 2, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -798,8 +777,6 @@ remove_with(Address, Function, Map, Parameters) ->
 %%%
 %%%  ``{badarg, {'Map', Map}}'' exception if `Map1' is not `map()'.
 %%%
-%%%  ``{badarg, {'Strict', Strict}}'' exception if `Strict' is not `boolean()'.
-%%%
 %%%  ``{badmap, Map}'' exception if a non-end key from `Address' is not associated with a map in `Map1'.
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -810,18 +787,17 @@ remove_with(Address, Function, Map, Parameters) ->
         Map1 :: map(),
         #{strict => false}) -> {list(Value :: any()), Map2 :: map()}.
 
-take([_H | _T] = Address, Map, Parameters)
+take(Address, Map, Parameters)
   when is_list(Address), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 take(Address, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Map, Parameters).
+  bad_argument_handler(Address, Map, Parameters).
 
 %%%-----------------------------------------------------------------------------
 %%% @doc
@@ -860,24 +836,23 @@ take(Address, Map, Parameters) ->
         Function :: filter_fun(),
         Map1 :: map(),
         #{strict => false}) -> {list(Value :: any()), Map2 :: map()}.
-take_with([_H | _T] = Address, Function, Map, Parameters)
+take_with(Address, Function, Map, Parameters)
   when is_list(Address), is_function(Function, 2), is_map(Map), is_map(Parameters) ->
-  handle_procedure_wrapper(Address, Map, #params{
+  handle_procedure_wrapper(Map, #params{
     address = Address,
     function = Function,
     op = ?FUNCTION_NAME,
     op_type = get_operation_type(?FUNCTION_NAME),
-    strict = maps:get(strict, Parameters, false),
-    parallel = maps:get(parallel, Parameters, false)
+    strict = maps:get(strict, Parameters, false)
   });
 
 take_with(Address, Function, Map, Parameters) ->
-  bad_argument_handler(?FUNCTION_NAME, Address, Function, 2, Map, Parameters).
+  bad_argument_handler(Address, Function, 2, Map, Parameters).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% handle element
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
--spec handle_element(Key :: any(),
+-spec handle_element(Key :: key(),
     IsValueExists :: boolean(),
     ExistedValue :: any(),
     Acc :: list(any()),
@@ -886,7 +861,7 @@ take_with(Address, Function, Map, Parameters) ->
     op :: get_with | put_with| update_with | remove_with | keys_with | take_with,
     function :: filter_fun() | modify_fun2() | modify_fun3()
     }) -> {list(Value :: any()), Map2 :: map()};
-    (Key :: any(),
+    (Key :: key(),
         IsValueExists :: boolean(),
         ExistedValue :: any(),
         Acc :: list(any()),
@@ -1038,8 +1013,8 @@ handle_element(Key, _IsValueExists, ExistedValue, Acc, Map,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Handle procedure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
--spec key_handler(Key :: any(),
-    Keys :: list(any()),
+-spec key_handler(Key :: key(),
+    Keys :: list(key()),
     Acc :: list(),
     Map1 :: map(),
     Parameters :: #params{}) ->
@@ -1078,6 +1053,9 @@ handle_keys([Keys | _Tail], _Acc, Map, #params{strict = true}) when not is_map(M
 handle_keys([_Keys | _Tail], _Acc, Map, #params{strict = false}) when not is_map(Map) ->
   {nothing, nothing};
 
+handle_keys([[] | _Tail] = _Address, _Acc, _Map, #params{strict = true} = Parameters) ->
+  erlang:error({badarg, {'Address', Parameters#params.address}});
+
 handle_keys(['*' | Tail] = Address, Acc, Map, #params{strict = Strict} = Parameters) ->
   AllKeys = maps:keys(Map),
   case {Strict, AllKeys} of
@@ -1091,7 +1069,7 @@ handle_keys(['*' | Tail] = Address, Acc, Map, #params{strict = Strict} = Paramet
       handle_keys([AllKeys] ++ Tail, Acc, Map, Parameters)
   end;
 
-handle_keys([Keys | Tail] = _Address, Acc, Map, #params{parallel = false} = Parameters) when is_list(Keys) ->
+handle_keys([Keys | Tail] = _Address, Acc, Map, #params{} = Parameters) when is_list(Keys) ->
   lists:foldl(fun(Key, {AccIn, MapIn}) ->
     case key_handler(Key, Tail, Acc, Map, Parameters) of
       {element, IsValueExists, ExistedValue} ->
@@ -1111,139 +1089,67 @@ handle_keys([Keys | Tail] = _Address, Acc, Map, #params{parallel = false} = Para
         end,
         {AccOut, MapOut}
     end
-  end, {Acc, Map}, Keys);
+  end, {Acc, Map}, Keys).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Parallel prototype
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-handle_keys([[Key] | Tail] = _Address, Acc, Map, #params{parallel = true} = Parameters) ->
-  case key_handler(Key, Tail, Acc, Map, Parameters) of
-    {element, IsValueExists, ExistedValue} ->
-      handle_element(Key, IsValueExists, ExistedValue, Acc, Map, Parameters);
-    {NewAccValue, NewMapValue} ->
-      AccOut = case NewAccValue of
-        nothing ->
-          Acc;
-        NewAccValue when is_list(NewAccValue) ->
-          Acc ++ NewAccValue
-      end,
-      MapOut = case NewMapValue of
-        nothing ->
-          Map;
-        NewMapValue ->
-          maps:put(Key, NewMapValue, Map)
-      end,
-      {AccOut, MapOut}
-  end;
-
-handle_keys([[_ | _] = Keys | Tail] = _Address, Acc, Map, #params{parallel = true, master_pid = MasterPid} = Parameters) ->
-  Self = self(),
-  KeyHandlerParallelFun = fun(From, Key) -> From ! {Key, key_handler(Key, Tail, Acc, Map, Parameters)} end,
-
-  KeyHandlerPids = [{spawn_link(fun() ->
-    try
-      % To receive erlang:error 'EXIT' message from deeply nested worker directly in master process
-      erlang:link(MasterPid)
-    catch
-      % In case of MasterPid is closed due to error in another branch
-      error:noproc -> noproc
-    end,
-    KeyHandlerParallelFun(Self, Key) end), Key} || Key <- Keys],
-
-  Results = [begin
-    receive
-      {Key, {_NewAcc, _NewMap}} = Msg -> Msg;
-      {Key, {element, _IsValueExists, _ExistedValue}} = Msg -> Msg
-    end
-  end || {Pid, Key} <- KeyHandlerPids, is_pid(Pid)],
-
-  lists:foldl(fun
-    ({Key, {element, IsValueExists, ExistedValue}}, {AccIn, MapIn}) ->
-      handle_element(Key, IsValueExists, ExistedValue, AccIn, MapIn, Parameters);
-    ({Key, {NewAcc, NewValue}}, {AccIn, MapIn}) ->
-      AccOut = case NewAcc of
-        nothing ->
-          AccIn;
-        NewAcc when is_list(NewAcc) ->
-          AccIn ++ NewAcc
-      end,
-      MapOut = case NewValue of
-        nothing ->
-          MapIn;
-        NewValue ->
-          maps:put(Key, NewValue, MapIn)
-      end,
-      {AccOut, MapOut}
-  end, {Acc, Map}, Results);
-
-
-handle_keys([Head | _Tail] = _Address, _Acc, _Map, Parameters) when not is_list(Head) ->
-  erlang:error({badarg, {'Address', Parameters#params.address}}).
-
-start_handle_keys(Address, [], Map, #params{parallel = false} = Parameters) ->
+start_handle_keys(Map, #params{address = Address} = Parameters) ->
   try
     handle_keys(Address, [], Map, Parameters)
   catch
     error:{badmap, LocalMap} ->
       % It is handled separately to add full Map into the error message
       erlang:error({badmap, LocalMap, Map})
-  end;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Parallel prototype
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-start_handle_keys(Address, [], Map, #params{parallel = true, timeout = Timeout} = Parameters) ->
-  ConsumerPid = self(),
-  spawn(fun() -> master_process(Address, Map, Parameters, ConsumerPid) end),
-  receive
-    {ok, Result} -> Result;
-    {error, Reason} -> erlang:error(Reason)
-  after Timeout ->
-    erlang:error(timeout)
   end.
-
-master_process(Address, Map, Parameters, ConsumerPid) ->
-  MasterPid = self(),
-  % Isolate trap_exit from consumer process by starting of master process
-  process_flag(trap_exit, true),
-  spawn_link(fun() -> ConsumerPid ! {ok, handle_keys(Address, [], Map, Parameters#params{master_pid = MasterPid})} end),
-  receive
-    {'EXIT', _Pid, {{badmap, LocalMap}, _Stack}} ->
-      % It is handled separately to add full Map into the error message
-      ConsumerPid ! {error, {badmap, LocalMap, Map}};
-    {'EXIT', _Pid, {Reason, _Stack}} when Reason /= normal ->
-      ConsumerPid ! {error, Reason}
-  end.
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helpers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-handle_procedure_wrapper(Address, Map, #params{op_type = Type} = Parameters) ->
-  valid = validate_parameters(Parameters),
-  handle_return_value(case {Parameters#params.strict, validate_address(Address)} of
-    {_, valid} ->
-      start_handle_keys(Address, [], Map, Parameters);
-    {true, invalid} ->
-      erlang:error({bad_address, Parameters#params.address});
-    {false, invalid} ->
-      {[], Map}
-  end, Type).
-
-validate_address(Address) ->
-  case lists:any(fun(E) -> E == [] end, Address) of
+handle_procedure_wrapper(Map, #params{op_type = Type} = Parameters) ->
+  validate_parameters(Parameters),
+  Result = case maybe_do_nothing(Parameters) of
     true ->
-      invalid;
+      {[], Map};
     false ->
-      valid
-  end.
+      start_handle_keys(Map, Parameters)
+  end,
+  handle_return_value(Result, Type).
 
 validate_parameters(#params{} = Parameters) ->
-  Strict = Parameters#params.strict,
-  erlang:is_boolean(Strict) orelse erlang:error({badarg, {'Strict', Strict}}),
-  valid.
+  ValidateFuns = [
+    {fun validate_parameter/1, {strict, Parameters#params.strict}},
+    {fun validate_parameter/1, {address, Parameters#params.strict, Parameters#params.address}}
+  ],
+  [F(Arg) || {F, Arg} <- ValidateFuns].
+
+validate_parameter({strict, Strict}) ->
+  erlang:is_boolean(Strict) orelse erlang:error({badarg, {'Parameters', 'Strict', Strict}});
+
+validate_parameter({address, true, Address = []}) ->
+  erlang:error({badarg, {'Address', Address}});
+
+validate_parameter({address, false, []}) ->
+  true;
+
+validate_parameter({address, Strict, Address}) ->
+  lists:all(fun
+    ([]) when Strict == false -> true;
+    ([_|_]) -> true;
+    ('*') -> true;
+    (_) -> erlang:error({badarg, {'Address', Address}})
+  end, Address).
+
+
+
+
+maybe_do_nothing(#params{address = Address, strict = false}) ->
+  EmptyAddress = Address == [] orelse lists:any(fun(E) -> E == [] end, Address),
+  if
+    EmptyAddress -> true;
+    true -> false
+  end;
+
+maybe_do_nothing(#params{}) ->
+  false.
+
 
 is_alowed_to_create_new_element(#params{op = put}) -> true;
 is_alowed_to_create_new_element(#params{op = put_with}) -> true;
@@ -1261,29 +1167,20 @@ handle_return_value({Acc, _}, collect) -> Acc;
 handle_return_value({_, Map}, modify) -> Map;
 handle_return_value(Value, multitask) -> Value.
 
-bad_argument_handler(Operation, Address, Function, FunctionArity, Map, Parameters) ->
+bad_argument_handler(Address, Function, FunctionArity, Map, Parameters) ->
   case is_function(Function, FunctionArity) of
     false ->
       erlang:error({badarg, {'Function', Function}});
     true ->
-      bad_argument_handler(Operation, Address, Map, Parameters)
+      bad_argument_handler(Address, Map, Parameters)
   end.
 
-bad_argument_handler(Operation, Address, Map, Parameters) ->
+bad_argument_handler(Address, Map, Parameters) ->
   case {is_list(Address), is_map(Map), is_map(Parameters)} of
     {_, _, false} ->
       erlang:error({badarg, {'Parameters', Parameters}});
     {_, false, _} ->
       erlang:error({badarg, {'Map', Map}});
     {false, _, _} ->
-      erlang:error({badarg, {'Address', Address}});
-    {true, _, _} when Address == [] ->
-      Strict = maps:get(strict, Parameters, false),
-      erlang:is_boolean(Strict) orelse erlang:error({badarg, {'Strict', Strict}}),
-      case {Strict, handle_return_value({[], Map}, get_operation_type(Operation))} of
-        {true, _} ->
-          erlang:error({badarg, {'Address', Address}});
-        {false, Value} ->
-          Value
-      end
+      erlang:error({badarg, {'Address', Address}})
   end.

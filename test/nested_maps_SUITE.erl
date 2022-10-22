@@ -203,7 +203,9 @@ simple_get_operation(_) ->
         fun simple_non_strict_get_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+%%    [Fun(Map, #{}) || Fun <- TestFunctions]
+    [Fun(Map, #{}) || Fun <- TestFunctions],
+
     ok.
 
 
@@ -261,9 +263,10 @@ simple_strict_get_exceptions(Map, Parameters) ->
     ?TRY({badkey, ne_key}, nested_maps:get([[k1_2], [ne_key]], Map, StrictParameters)),
     ?TRY({badkey, ne_key}, nested_maps:get([[ne_key]], Map, StrictParameters)),
 
-    ?TRY({bad_address, [[]]}, nested_maps:get([[]], Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], []]}, nested_maps:get([[k1_2], []], Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [k3_2]]}, nested_maps:get([[k1_2], [], [k3_2]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[]]}}, nested_maps:get([[]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], []]}}, nested_maps:get([[k1_2], []], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], [], [k3_2]]}}, nested_maps:get([[k1_2], [], [k3_2]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,[k3_2]]}}, nested_maps:get([[k1_2], not_a_list, [k3_2]], Map, StrictParameters)),
     ok.
 
 simple_non_strict_get_exceptions(Map, Parameters) ->
@@ -274,9 +277,8 @@ simple_non_strict_get_exceptions(Map, Parameters) ->
 common_simple_get_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:get([[k1_2], [k2_1], [k3_2]], not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:get(not_a_list, Map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
-         nested_maps:get([[k1_2], not_a_list, [k3_2]], Map, Parameters)),
     ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:get([[k1_2], [k2_1]], Map, not_strict)),
+    ?TRY({badarg,{'Address', [[k1_2],not_a_list,[k3_2]]}}, nested_maps:get([[k1_2], not_a_list, [k3_2]], Map, Parameters)),
     ok.
 
 %%% WILDCARD
@@ -290,7 +292,7 @@ wildcard_get_operation(_) ->
         fun wildcard_non_strict_get_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_get_operations(Map, Parameters) ->
@@ -342,12 +344,7 @@ wildcard_strict_get_exceptions(Map, Parameters) ->
     ?TRY({badkey, ne_key}, nested_maps:get([[ne_key], [k2_1], '*'], Map, StrictParameters)),
     ?TRY({unreachable_address, [[k1_3], '*', [k3_2]]}, nested_maps:get([[k1_3], '*', [k3_2]], Map, StrictParameters)),
 
-    case maps:get(parallel, Parameters) of
-        true ->
-            ?TRYV([{badmap, {'*', v1_1}, Map}, {unreachable_address, ['*', '*', '*']}], nested_maps:get(['*', '*', '*'], Map, StrictParameters));
-        false ->
-            ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:get(['*', '*', '*'], Map, StrictParameters))
-    end,
+    ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:get(['*', '*', '*'], Map, StrictParameters)),
     ok.
 
 wildcard_non_strict_get_exceptions(Map, Parameters) ->
@@ -369,7 +366,7 @@ group_get_operation(_) ->
         fun group_non_strict_get_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_get_operations(Map, Parameters) ->
@@ -444,7 +441,7 @@ simple_get_width_operation(_) ->
         fun simple_non_strict_get_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 simple_strict_get_with_operations(Map, Parameters) ->
@@ -472,10 +469,12 @@ simple_strict_get_with_exceptions(Map, Parameters) ->
 
     ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:get_with([[k1_1], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({badkey, ne_key}, nested_maps:get_with([[k1_2], [k2_1], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [ne_key]]},
+    ?TRY({badarg,{'Address', [[k1_2], [], [ne_key]]}},
          nested_maps:get_with([[k1_2], [], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
 
     ?TRY({badarg, {'Address', []}}, nested_maps:get_with([], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], not_a_list, [k3_2]]}},
+        nested_maps:get_with([[k1_2], not_a_list, [k3_2]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ok.
 
 simple_non_strict_get_with_exceptions(Map, Parameters) ->
@@ -500,8 +499,9 @@ common_simple_get_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:get_with(not_a_list, ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:get_with([[k1_2], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
-         nested_maps:get_with([[k1_2], not_a_list, [k3_2]], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
+
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,[k3_2]]}}, nested_maps:get_with([[k1_2], not_a_list, [k3_2]], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
+
     ok.
 
 %%% Wildcard
@@ -514,7 +514,7 @@ wildcard_get_with_operations(_) ->
         fun wildcard_non_strict_get_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 wildcard_strict_get_with_operations(Map, Parameters) ->
     StrictParameters = Parameters#{strict => true},
@@ -558,7 +558,7 @@ group_get_with_operations(_) ->
         fun group_non_strict_get_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 group_strict_get_with_operations(Map, Parameters) ->
     StrictParameters = Parameters#{strict => true},
@@ -601,7 +601,7 @@ simple_put_operations(_) ->
         fun simple_non_strict_put_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 simple_strict_put_operations(Map, Parameters) ->
@@ -658,7 +658,7 @@ simple_strict_put_exceptions(Map, Parameters) ->
     ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:put([[k1_1], [k4_1], [k3_1]], v3_1, Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:put([], v3_1_1_new, Map, StrictParameters)),
     ?TRY({badkey, k1_4}, nested_maps:put([[k1_4], [k4_1], [k3_1]], v3_1, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [k3_1]]}, nested_maps:put([[k1_2], [], [k3_1]], v3_1_1_new, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], [], [k3_1]]}}, nested_maps:put([[k1_2], [], [k3_1]], v3_1_1_new, Map, StrictParameters)),
     ok.
 
 simple_non_strict_put_exceptions(Map, Parameters) ->
@@ -669,7 +669,7 @@ simple_non_strict_put_exceptions(Map, Parameters) ->
 common_simple_put_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:put([[k1_2], [k2_1], [k3_2]], v3_1, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:put(not_a_list, v3_1, Map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
+    ?TRY({badarg,{'Address', [[k1_2],not_a_list,[k3_2]]}},
          nested_maps:put([[k1_2], not_a_list, [k3_2]], v3_1, Map, Parameters)),
     ok.
 
@@ -683,7 +683,7 @@ wildcard_put_operations(_) ->
         fun wildcard_non_strict_put_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_put_operations(Map, Parameters) ->
@@ -737,7 +737,7 @@ group_put_operations(_) ->
         fun group_non_strict_put_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_put_operations(Map, Parameters) ->
@@ -793,7 +793,7 @@ simple_put_with_operations(_) ->
         fun simple_non_strict_put_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 simple_strict_put_with_operations(Map, Parameters) ->
@@ -838,7 +838,7 @@ simple_strict_put_with_exceptions(Map, Parameters) ->
 
     ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:put_with([[k1_1], [k4_1], [k3_1]], ?FUN_PUT, Map, StrictParameters)),
     ?TRY({badkey, k1_4}, nested_maps:put_with([[k1_4], [k4_1], [k3_1]], ?FUN_PUT, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [k3_1]]}, nested_maps:put_with([[k1_2], [], [k3_1]], ?FUN_PUT, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], [], [k3_1]]}}, nested_maps:put_with([[k1_2], [], [k3_1]], ?FUN_PUT, Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:put_with([], ?FUN_PUT, Map, StrictParameters)),
     ok.
 
@@ -859,7 +859,7 @@ common_simple_put_with_exceptions(Map, Parameters) ->
 
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:put_with([[k1_2], [k2_1], [k3_2]], ?FUN_PUT, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:put_with(not_a_list, ?FUN_PUT, Map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,[k3_2]]}},
          nested_maps:put_with([[k1_2], not_a_list, [k3_2]], ?FUN_PUT, Map, Parameters)),
     ok.
 
@@ -874,7 +874,7 @@ wildcard_put_with_operations(_) ->
         fun wildcard_non_strict_put_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_put_with_operations(Map, Parameters) ->
@@ -928,7 +928,7 @@ group_put_with_operations(_) ->
         fun group_non_strict_put_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_put_with_operations(Map, Parameters) ->
@@ -983,7 +983,7 @@ simple_keys_operations(_) ->
         fun simple_non_strict_keys_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 simple_strict_keys_operations(Map, Parameters) ->
@@ -1011,8 +1011,8 @@ simple_strict_keys_exceptions(Map, Parameters) ->
     ok = common_simple_keys_exceptions(Map, StrictParameters),
 
     ?TRY({badmap, {[k2_1], v1_1}, Map}, nested_maps:keys([[k1_1], [k2_1]], Map, StrictParameters)),
-    ?TRY({bad_address, [[]]}, nested_maps:keys([[]], Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], []]}, nested_maps:keys([[k1_2], []], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[]]}}, nested_maps:keys([[]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], []]}}, nested_maps:keys([[k1_2], []], Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:keys([], Map, StrictParameters)),
     ?TRY({badkey, k1_3}, nested_maps:keys([[k1_3]], Map, StrictParameters)),
 
@@ -1049,7 +1049,7 @@ wildcard_keys_operations(_) ->
         fun wildcard_non_strict_keys_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_keys_operations(Map, Parameters) ->
@@ -1092,7 +1092,7 @@ group_keys_operations(_) ->
         fun group_non_strict_keys_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_keys_operations(Map, Parameters) ->
@@ -1136,7 +1136,7 @@ simple_keys_with_operations(_) ->
         fun simple_non_strict_keys_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 simple_strict_keys_with_operations(Map, Parameters) ->
@@ -1166,8 +1166,8 @@ simple_strict_keys_with_exceptions(Map, Parameters) ->
     ok = common_simple_keys_with_exceptions(Map, StrictParameters),
 
     ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:keys_with([[k1_1], [k2_1]], ?FUN_KEYS, Map, StrictParameters)),
-    ?TRY({bad_address, [[]]}, nested_maps:keys_with([[]], ?FUN_KEYS, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], []]}, nested_maps:keys_with([[k1_2], []], ?FUN_KEYS, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[]]}}, nested_maps:keys_with([[]], ?FUN_KEYS, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], []]}}, nested_maps:keys_with([[k1_2], []], ?FUN_KEYS, Map, StrictParameters)),
     ?TRY({badmap, v1_1, Map}, nested_maps:keys_with([[k1_1]], ?FUN_KEYS, Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:keys_with([], ?FUN_KEYS, Map, StrictParameters)),
 
@@ -1221,7 +1221,7 @@ wildcard_keys_with_operations(_) ->
         fun wildcard_non_strict_keys_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_keys_with_operations(Map, Parameters) ->
@@ -1267,7 +1267,7 @@ group_keys_with_operations(_) ->
         fun group_non_strict_keys_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_keys_with_operations(Map, Parameters) ->
@@ -1311,7 +1311,7 @@ simple_update_operations(_) ->
         fun simple_non_strict_update_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 simple_strict_update_operations(Map, Parameters) ->
@@ -1393,9 +1393,9 @@ simple_strict_update_exceptions(Map, Parameters) ->
     % Missing keys
     ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:update([[k1_1], [k2_1]], new_value, Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:update([], new_value, Map, StrictParameters)),
-    ?TRY({bad_address, [[]]}, nested_maps:update([[]], new_value, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], []]}, nested_maps:update([[k1_2], []], new_value, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [k3_2]]}, nested_maps:update([[k1_2], [], [k3_2]], new_value, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[]]}}, nested_maps:update([[]], new_value, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], []]}}, nested_maps:update([[k1_2], []], new_value, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], [], [k3_2]]}}, nested_maps:update([[k1_2], [], [k3_2]], new_value, Map, StrictParameters)),
     ok.
 
 simple_non_strict_update_exceptions(Map, Parameters) ->
@@ -1420,7 +1420,7 @@ wildcard_update_operations(_) ->
         fun wildcard_non_strict_update_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_update_operations(Map, Parameters) ->
@@ -1490,12 +1490,7 @@ wildcard_strict_update_exceptions(Map, Parameters) ->
     ?TRY({unreachable_address, [[k1_3], '*', [k3_2]]},
          nested_maps:update([[k1_3], '*', [k3_2]], new_value, Map, StrictParameters)),
 
-    case maps:get(parallel, Parameters) of
-        true ->
-            ?TRYV([{badmap, {'*', v1_1}, Map}, {unreachable_address, ['*', '*', '*']}], nested_maps:update(['*', '*', '*'], new_value, Map, StrictParameters));
-        false ->
-            ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:update(['*', '*', '*'], new_value, Map, StrictParameters))
-    end,
+    ?TRY({badmap, {'*', v1_1}, Map}, nested_maps:update(['*', '*', '*'], new_value, Map, StrictParameters)),
     ok.
 
 wildcard_non_strict_update_exceptions(Map, Parameters) ->
@@ -1517,7 +1512,7 @@ group_update_operations(_) ->
         fun group_non_strict_update_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_update_operations(Map, Parameters) ->
@@ -1613,7 +1608,7 @@ simple_update_with_operations(_) ->
         fun simple_non_strict_update_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 %%% Simple
@@ -1647,7 +1642,7 @@ simple_strict_update_with_exceptions(Map, Parameters) ->
 
     ?TRY({badmap, {[k4_1],v1_1}, Map}, nested_maps:update_with([[k1_1], [k4_1], [k3_1]], ?FUN_UPDATE, Map, StrictParameters)),
     ?TRY({badkey, ne_key}, nested_maps:update_with([[k1_2], [k2_1], [ne_key]], ?FUN_UPDATE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [ne_key]]},
+    ?TRY({badarg,{'Address', [[k1_2], [], [ne_key]]}},
          nested_maps:update_with([[k1_2], [], [ne_key]], ?FUN_UPDATE, Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:update_with([], ?FUN_UPDATE, Map, StrictParameters)),
     ok.
@@ -1667,7 +1662,7 @@ common_simple_update_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:update_with([[k1_2], [k2_1], [k3_2]], ?FUN_UPDATE, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:update_with(not_a_list, ?FUN_UPDATE, Map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,[k3_2]]}},
          nested_maps:update_with([[k1_2], not_a_list, [k3_2]], ?FUN_UPDATE, Map, Parameters)),
     ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:update_with([[k1_2], [k2_1]], ?FUN_UPDATE, Map, not_strict)),
     ok.
@@ -1683,7 +1678,7 @@ wildcard_update_with_operations(_) ->
         fun wildcard_non_strict_update_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_update_with_operations(Map, Parameters) ->
@@ -1714,7 +1709,7 @@ wildcard_strict_update_with_exceptions(Map, Parameters) ->
 
     ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:update_with([[k1_1], '*', '*'], ?FUN_UPDATE, Map, StrictParameters)),
     ?TRY({badkey, ne_key}, nested_maps:update_with([[k1_2], '*', [ne_key]], ?FUN_UPDATE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], '*']}, nested_maps:update_with([[k1_2], [], '*'], ?FUN_UPDATE, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], [], '*']}}, nested_maps:update_with([[k1_2], [], '*'], ?FUN_UPDATE, Map, StrictParameters)),
     ?TRY({unreachable_address, ['*']}, nested_maps:update_with(['*'], ?FUN_UPDATE, #{}, StrictParameters)),
     ok.
 
@@ -1725,7 +1720,7 @@ wildcard_non_strict_update_with_exceptions(Map, Parameters) ->
 
 common_wildcard_update_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:update_with([[k1_2], '*', [k3_2]], ?FUN_UPDATE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, '*']}},
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,'*']}},
          nested_maps:update_with([[k1_2], not_a_list, '*'], ?FUN_UPDATE, Map, Parameters)),
     ok.
 
@@ -1739,7 +1734,7 @@ group_update_with_operations(_) ->
         fun group_non_strict_update_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_update_with_operations(Map, Parameters) ->
@@ -1769,7 +1764,7 @@ group_strict_update_with_exceptions(Map, Parameters) ->
     ok = common_group_update_with_exceptions(Map, StrictParameters),
     ?TRY({badmap, {[k2_1,k2_2],v1_1}, Map}, nested_maps:update_with([[k1_1], [k2_1, k2_2], [k3_1]], ?FUN_UPDATE, Map, StrictParameters)),
     ?TRY({badkey, ne_key}, nested_maps:update_with([[k1_2], [k2_1, k2_2], [ne_key]], ?FUN_UPDATE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [k2_1, k2_2], []]},
+    ?TRY({badarg,{'Address', [[k1_2], [k2_1, k2_2], []]}},
          nested_maps:update_with([[k1_2], [k2_1, k2_2], []], ?FUN_UPDATE, Map, StrictParameters)),
     ok.
 
@@ -1781,7 +1776,7 @@ group_non_strict_update_with_exceptions(Map, Parameters) ->
 common_group_update_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:update_with([[k1_1], [k2_1, k2_2], [k3_1]], ?FUN_UPDATE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], [k2_1, k2_2], not_a_list]}},
+    ?TRY({badarg,{'Address',[[k1_2],[k2_1,k2_2],not_a_list]}},
          nested_maps:update_with([[k1_2], [k2_1, k2_2], not_a_list], ?FUN_UPDATE, Map, Parameters)),
     ok.
 
@@ -1801,7 +1796,7 @@ simple_remove_operations(_) ->
         fun simple_non_strict_remove_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 simple_strict_remove_operations(Map, Parameters) ->
@@ -1879,9 +1874,9 @@ simple_strict_remove_exceptions(Map, Parameters) ->
     % Missing keys
     ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:remove([[k1_1], [k2_1]], Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:remove([], Map, StrictParameters)),
-    ?TRY({bad_address, [[]]}, nested_maps:remove([[]], Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], []]}, nested_maps:remove([[k1_2], []], Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [k3_2]]}, nested_maps:remove([[k1_2], [], [k3_2]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[]]}}, nested_maps:remove([[]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], []]}}, nested_maps:remove([[k1_2], []], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], [], [k3_2]]}}, nested_maps:remove([[k1_2], [], [k3_2]], Map, StrictParameters)),
     ok.
 
 simple_non_strict_remove_exceptions(Map, Parameters) ->
@@ -1905,7 +1900,7 @@ wildcard_remove_operations(_) ->
         fun wildcard_non_strict_remove_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_remove_operations(Map, Parameters) ->
@@ -1984,7 +1979,7 @@ group_remove_operations(_) ->
         fun group_non_strict_remove_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_remove_operations(Map, Parameters) ->
@@ -2082,7 +2077,7 @@ simple_remove_with_operations(_) ->
         fun simple_non_strict_remove_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 %%% Simple
@@ -2110,7 +2105,7 @@ simple_strict_remove_with_exceptions(Map, Parameters) ->
     StrictParameters = Parameters#{strict => true},
     ok = common_simple_remove_with_exceptions(Map, StrictParameters),
     ?TRY({badkey, ne_key}, nested_maps:remove_with([[k1_2], [k2_1], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [ne_key]]},
+    ?TRY({badarg,{'Address', [[k1_2], [], [ne_key]]}},
          nested_maps:remove_with([[k1_2], [], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:remove_with([], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:remove_with([[k1_1], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
@@ -2135,7 +2130,7 @@ common_simple_remove_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:remove_with(not_a_list, ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:remove_with([[k1_2], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,[k3_2]]}},
          nested_maps:remove_with([[k1_2], not_a_list, [k3_2]], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ?TRY({badarg, {'Parameters', not_strict}},
          nested_maps:remove_with([[k1_2], [k2_1]], ?FUN_GET_REMOVE_TAKE, Map, not_strict)),
@@ -2153,7 +2148,7 @@ wildcard_remove_with_operations(_) ->
         fun wildcard_non_strict_remove_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 
@@ -2180,7 +2175,7 @@ wildcard_strict_remove_with_exceptions(Map, Parameters) ->
     StrictParameters = Parameters#{strict => true},
     ok = common_wildcard_remove_with_exceptions(Map, StrictParameters),
     ?TRY({badkey, ne_key}, nested_maps:remove_with([[k1_2], '*', [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], '*', []]},
+    ?TRY({badarg,{'Address', [[k1_2], '*', []]}},
          nested_maps:remove_with([[k1_2], '*', []], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({unreachable_address, [[k1_3], '*', [k3_1]]},
          nested_maps:remove_with([[k1_3], '*', [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
@@ -2195,7 +2190,7 @@ wildcard_non_strict_remove_with_exceptions(Map, Parameters) ->
 common_wildcard_remove_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:remove_with([[k1_2], '*', [k3_2]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, '*']}},
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,'*']}},
          nested_maps:remove_with([[k1_2], not_a_list, '*'], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ok.
 
@@ -2210,7 +2205,7 @@ group_remove_with_operations(_) ->
         fun group_non_strict_remove_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_remove_with_operations(Map, Parameters) ->
@@ -2249,7 +2244,7 @@ group_non_strict_remove_with_exceptions(Map, Parameters) ->
 common_group_remove_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:remove_with([[k1_2], [k2_1, k2_2], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], [k2_1, k2_2], not_a_list]}},
+    ?TRY({badarg,{'Address',[[k1_2],[k2_1,k2_2],not_a_list]}},
          nested_maps:remove_with([[k1_2], [k2_1, k2_2], not_a_list], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ok.
 
@@ -2267,7 +2262,7 @@ simple_take_operations(_) ->
         fun simple_non_strict_take_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 %%% Simple
@@ -2347,9 +2342,9 @@ simple_strict_take_exceptions(Map, Parameters) ->
 
 % Missing keys
     ?TRY({badarg, {'Address', []}}, nested_maps:take([], Map, StrictParameters)),
-    ?TRY({bad_address, [[]]}, nested_maps:take([[]], Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], []]}, nested_maps:take([[k1_2], []], Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [k3_2]]}, nested_maps:take([[k1_2], [], [k3_2]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[]]}}, nested_maps:take([[]], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], []]}}, nested_maps:take([[k1_2], []], Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], [], [k3_2]]}}, nested_maps:take([[k1_2], [], [k3_2]], Map, StrictParameters)),
     ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:take([[k1_1], [k2_1]], Map, StrictParameters)),
     ok.
 
@@ -2375,7 +2370,7 @@ wildcard_take_operations(_) ->
         fun wildcard_non_strict_take_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_take_operations(Map, Parameters) ->
@@ -2467,7 +2462,7 @@ group_take_operations(_) ->
         fun group_non_strict_take_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_take_operations(Map, Parameters) ->
@@ -2575,7 +2570,7 @@ simple_take_with_operations(_) ->
         fun simple_non_strict_take_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 %%% Simple
@@ -2604,7 +2599,7 @@ simple_strict_take_with_exceptions(Map, Parameters) ->
     StrictParameters = Parameters#{strict => true},
     ok = common_simple_take_with_exceptions(Map, StrictParameters),
     ?TRY({badkey, ne_key}, nested_maps:take_with([[k1_2], [k2_1], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], [], [ne_key]]},
+    ?TRY({badarg,{'Address', [[k1_2], [], [ne_key]]}},
          nested_maps:take_with([[k1_2], [], [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({badarg, {'Address', []}}, nested_maps:take_with([], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({badmap, {[k2_1],v1_1}, Map}, nested_maps:take_with([[k1_1], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
@@ -2629,7 +2624,7 @@ common_simple_take_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:take_with(not_a_list, ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:take_with([[k1_2], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,[k3_2]]}},
          nested_maps:take_with([[k1_2], not_a_list, [k3_2]], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ?TRY({badarg, {'Parameters', not_strict}},
          nested_maps:take_with([[k1_2], [k2_1]], ?FUN_GET_REMOVE_TAKE, Map, not_strict)),
@@ -2647,7 +2642,7 @@ wildcard_take_with_operations(_) ->
         fun wildcard_non_strict_take_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 wildcard_strict_take_with_operations(Map, Parameters) ->
@@ -2674,7 +2669,7 @@ wildcard_strict_take_with_exceptions(Map, Parameters) ->
     StrictParameters = Parameters#{strict => true},
     ok = common_wildcard_take_with_exceptions(Map, StrictParameters),
     ?TRY({badkey, ne_key}, nested_maps:take_with([[k1_2], '*', [ne_key]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
-    ?TRY({bad_address, [[k1_2], '*', []]}, nested_maps:take_with([[k1_2], '*', []], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
+    ?TRY({badarg,{'Address', [[k1_2], '*', []]}}, nested_maps:take_with([[k1_2], '*', []], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({unreachable_address, [[k1_3], '*', [k3_1]]},
          nested_maps:take_with([[k1_3], '*', [k3_1]], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
     ?TRY({badmap, {'*',v1_1}, Map}, nested_maps:take_with([[k1_1], '*', '*'], ?FUN_GET_REMOVE_TAKE, Map, StrictParameters)),
@@ -2688,8 +2683,8 @@ wildcard_non_strict_take_with_exceptions(Map, Parameters) ->
 common_wildcard_take_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:take_with([[k1_2], '*', [k3_2]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], not_a_list, '*']}},
-         nested_maps:take_with([[k1_2], not_a_list, '*'], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
+    ?TRY({badarg,{'Address',[[k1_2],not_a_list,'*']}},
+        nested_maps:take_with([[k1_2], not_a_list, '*'], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ok.
 
 % Group
@@ -2703,7 +2698,7 @@ group_take_with_operations(_) ->
         fun group_non_strict_take_with_exceptions/2
     ],
 
-    [Fun(Map, #{parallel => Parallel}) || Parallel <- [false, true], Fun <- TestFunctions],
+    [Fun(Map, #{}) || Fun <- TestFunctions],
     ok.
 
 group_strict_take_with_operations(Map, Parameters) ->
@@ -2745,7 +2740,7 @@ group_non_strict_take_with_exceptions(Map, Parameters) ->
 common_group_take_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}},
          nested_maps:take_with([[k1_2], [k2_1, k2_2], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
-    ?TRY({badarg, {'Address', [[k1_2], [k2_1, k2_2], not_a_list]}},
+    ?TRY({badarg,{'Address',[[k1_2],[k2_1,k2_2],not_a_list]}},
          nested_maps:take_with([[k1_2], [k2_1, k2_2], not_a_list], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
     ok.
 
@@ -2772,12 +2767,12 @@ eq(Expected, Value) ->
     end.
 
 
-eq2(ExpectedList, Value) ->
-    case lists:any(fun(Expected) -> compare(Expected, Value) end, ExpectedList) of
-        true -> true;
-        false ->
-            ct:fail("~nExpected one of: ~p~nGot: ~p~n", [ExpectedList, Value])
-    end.
+%%eq2(ExpectedList, Value) ->
+%%    case lists:any(fun(Expected) -> compare(Expected, Value) end, ExpectedList) of
+%%        true -> true;
+%%        false ->
+%%            ct:fail("~nExpected one of: ~p~nGot: ~p~n", [ExpectedList, Value])
+%%    end.
 
 compare({[_|_] = List1, #{} = Map1}, {[_|_] = List2, #{} = Map2}) ->
     compare(List1, List2) andalso compare(Map1, Map2);
@@ -2802,7 +2797,7 @@ compare(Map1, Map2) when is_map(Map1), is_map(Map2) ->
 %% parameter the wildcard '*' is used as mark where the anonymous variable
 %% should be placed.
 
-compare({Term1, {Term2, '*'}} = E1, E2) ->
+compare({Term1, {Term2, '*'}} = _E1, E2) ->
     case E2 of
         {Term1, {Term2, _}} ->
             true;
@@ -2810,7 +2805,7 @@ compare({Term1, {Term2, '*'}} = E1, E2) ->
             false
     end;
 
-compare({Term1, '*'} = E1, E2) ->
+compare({Term1, '*'} = _E1, E2) ->
     case E2 of
         {Term1, _} ->
             true;
