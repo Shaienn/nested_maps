@@ -276,7 +276,7 @@ common_simple_get_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:get(not_a_list, Map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
          nested_maps:get([[k1_2], not_a_list, [k3_2]], Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}}, nested_maps:get([[k1_2], [k2_1]], Map, not_strict)),
+    ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:get([[k1_2], [k2_1]], Map, not_strict)),
     ok.
 
 %%% WILDCARD
@@ -1035,7 +1035,7 @@ common_simple_keys_operations(Map, Parameters) ->
 common_simple_keys_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:keys([[k1_2], [k2_1], [k3_2]], not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:keys(not_a_list, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}}, nested_maps:keys([[k1_2], [k2_1]], Map, not_strict)),
+    ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:keys([[k1_2], [k2_1]], Map, not_strict)),
     ok.
 
 %%% WILDCARD
@@ -1193,7 +1193,7 @@ common_simple_keys_with_operations(Map, Parameters) ->
 common_simple_keys_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:keys_with([[k1_2], [k2_1], [k3_2]], ?FUN_KEYS, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:keys_with(not_a_list, ?FUN_KEYS, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}}, nested_maps:keys_with([[k1_2], [k2_1]], ?FUN_KEYS, Map, not_strict)),
+    ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:keys_with([[k1_2], [k2_1]], ?FUN_KEYS, Map, not_strict)),
 
     Bad_fun1 = fun(_K, V) when V > 20 -> not_true; (_, _) -> not_false end,
     ?TRY({badarg, {'Function', Bad_fun1}}, nested_maps:keys_with([[k1_2], [k2_2]], Bad_fun1, Map, Parameters)),
@@ -1406,7 +1406,7 @@ simple_non_strict_update_exceptions(Map, Parameters) ->
 common_simple_update_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:update([[k1_2], [k2_1], [k3_2]], new_value, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:update(not_a_list, new_value, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}}, nested_maps:update([[k1_2], [k2_1]], new_value, Map, not_strict)),
+    ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:update([[k1_2], [k2_1]], new_value, Map, not_strict)),
     ok.
 
 %%% Wildcard
@@ -1669,7 +1669,7 @@ common_simple_update_with_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:update_with(not_a_list, ?FUN_UPDATE, Map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
          nested_maps:update_with([[k1_2], not_a_list, [k3_2]], ?FUN_UPDATE, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}}, nested_maps:update_with([[k1_2], [k2_1]], ?FUN_UPDATE, Map, not_strict)),
+    ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:update_with([[k1_2], [k2_1]], ?FUN_UPDATE, Map, not_strict)),
     ok.
 
 %%% Wildcard
@@ -1891,7 +1891,7 @@ simple_non_strict_remove_exceptions(Map, Parameters) ->
 common_simple_remove_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:remove([[k1_2], [k2_1], [k3_2]], not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:remove(not_a_list, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}}, nested_maps:remove([[k1_2], [k2_1]], Map, not_strict)),
+    ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:remove([[k1_2], [k2_1]], Map, not_strict)),
     ok.
 
 %%% Wildcard
@@ -2137,7 +2137,7 @@ common_simple_remove_with_exceptions(Map, Parameters) ->
          nested_maps:remove_with([[k1_2], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
          nested_maps:remove_with([[k1_2], not_a_list, [k3_2]], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}},
+    ?TRY({badarg, {'Parameters', not_strict}},
          nested_maps:remove_with([[k1_2], [k2_1]], ?FUN_GET_REMOVE_TAKE, Map, not_strict)),
 
     ok.
@@ -2361,7 +2361,7 @@ simple_non_strict_take_exceptions(Map, Parameters) ->
 common_simple_take_exceptions(Map, Parameters) ->
     ?TRY({badarg, {'Map', not_a_map}}, nested_maps:take([[k1_2], [k2_1], [k3_2]], not_a_map, Parameters)),
     ?TRY({badarg, {'Address', not_a_list}}, nested_maps:take(not_a_list, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}}, nested_maps:take([[k1_2], [k2_1]], Map, not_strict)),
+    ?TRY({badarg, {'Parameters', not_strict}}, nested_maps:take([[k1_2], [k2_1]], Map, not_strict)),
     ok.
 
 %%% Wildcard
@@ -2631,7 +2631,7 @@ common_simple_take_with_exceptions(Map, Parameters) ->
          nested_maps:take_with([[k1_2], [k2_1], [k3_1]], ?FUN_GET_REMOVE_TAKE, not_a_map, Parameters)),
     ?TRY({badarg, {'Address', [[k1_2], not_a_list, [k3_2]]}},
          nested_maps:take_with([[k1_2], not_a_list, [k3_2]], ?FUN_GET_REMOVE_TAKE, Map, Parameters)),
-    ?TRY({badarg, {'Options', not_strict}},
+    ?TRY({badarg, {'Parameters', not_strict}},
          nested_maps:take_with([[k1_2], [k2_1]], ?FUN_GET_REMOVE_TAKE, Map, not_strict)),
 
     ok.
