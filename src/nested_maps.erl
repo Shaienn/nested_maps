@@ -1139,11 +1139,7 @@ validate_parameter({address, Strict, Address}) ->
 
 
 maybe_do_nothing(#params{address = Address, strict = false}) ->
-  EmptyAddress = Address == [] orelse lists:any(fun(E) -> E == [] end, Address),
-  if
-    EmptyAddress -> true;
-    true -> false
-  end;
+  Address == [] orelse lists:any(fun(E) -> E == [] end, Address);
 
 maybe_do_nothing(#params{}) ->
   false.

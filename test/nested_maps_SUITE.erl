@@ -206,7 +206,6 @@ simple_get_operation(_) ->
         fun simple_non_strict_get_exceptions/2
     ],
 
-%%    [Fun(Map, #{}) || Fun <- TestFunctions]
     [Fun(Map, #{}) || Fun <- TestFunctions],
 
     ok.
@@ -2769,13 +2768,6 @@ eq(Expected, Value) ->
             ct:fail("~nExpected: ~p~nGot: ~p~n", [Expected, Value])
     end.
 
-
-%%eq2(ExpectedList, Value) ->
-%%    case lists:any(fun(Expected) -> compare(Expected, Value) end, ExpectedList) of
-%%        true -> true;
-%%        false ->
-%%            ct:fail("~nExpected one of: ~p~nGot: ~p~n", [ExpectedList, Value])
-%%    end.
 
 compare({[_|_] = List1, #{} = Map1}, {[_|_] = List2, #{} = Map2}) ->
     compare(List1, List2) andalso compare(Map1, Map2);
