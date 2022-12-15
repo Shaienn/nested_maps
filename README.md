@@ -105,7 +105,7 @@ There may be a usual (non-strict) address (address()) and a strict address (stri
 
 Usage:
 
-For example there is a map:
+There is the example map:
 
 ```
 Map = #{ 
@@ -124,19 +124,19 @@ Map = #{
       }.
 ```
 
-And we want to get value of `k3_2` key:
+To get the value of `k3_2` key need to do the following:
 
 ```
    [v3_2_1] = nested_maps:get([[k1_2], [k2_1], [k3_2]], Map, #{strict => false})
 ```
 
-Or we want to get values from all keys next after `k2_2` key:
+To get values from all keys under the `k2_2` key:
 
 ```
    [v3_2_2, v3_3_2] = nested_maps:get([[k1_2], [k2_2], '*'], Map, #{strict => false})
 ```
 
-Or we want to get `k3_2` values from both of branches:
+To get `k3_2` values from both of branches:
 
 ```
    [v3_2_1, v3_2_2] = nested_maps:get([[k1_2], [k2_1, k2_2], [k3_2]], Map, #{strict => false})
